@@ -1,0 +1,8 @@
+{
+  "makefile.configureOnOpen": true,
+  "files.associations": {
+    "iostream": "cpp",
+    "format": "cpp"
+  },
+  "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make"
+}
