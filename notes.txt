@@ -92,3 +92,17 @@ Questions
 
 Notes
 - Will need a notation and data structure for build instructions / solutions.
+
+Claw   P---P---:P-------:cRCu--Cu:--------
+Snake  P-P-P-P-:------Sy:CgCg--Cg:--Cy----:CwcyCw--
+Piggy  P---P-P-:WrCmCmWr:P-----P-:P-cwSw--:WmcrCrWm
+
+Test shape "Books" by RunExcept...
+https://discord.com/channels/1000343719314198548/1286691966679126126/1287210914394673162
+
+Drop Book?
+
+Question
+- Are there shapes that are possible in 4-layer mode, that are impossible in 5-layer mode?
+- I think the claw shapes can be made in both, even if they have fewer layers.
+- Are there less than 4 layer shapes only possible in 5-layer mode?

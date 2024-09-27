@@ -1,16 +1,19 @@
-ALL : search4 lookup4 search5 lookup5
+ALL : display.exe search4.exe lookup4.exe search5.exe lookup5.exe
 
-search4 : search.cpp shapez.hpp
+display.exe : display.cpp shapez.hpp
+	g++ -o display display.cpp -std=c++23 -O3
+
+search4.exe : search.cpp shapez.hpp
 	g++ -o search4 search.cpp -std=c++23 -O3
 
-lookup4 : lookup.cpp shapez.hpp
+lookup4.exe : lookup.cpp shapez.hpp
 	g++ -o lookup4 lookup.cpp -std=c++23 -O3
 
-search5 : search.cpp shapez.hpp
+search5.exe : search.cpp shapez.hpp
 	g++ -o search5 search.cpp -std=c++23 -O3 -DCONFIG_LAYER=5
 
-lookup5 : lookup.cpp shapez.hpp
+lookup5.exe : lookup.cpp shapez.hpp
 	g++ -o lookup5 lookup.cpp -std=c++23 -O3 -DCONFIG_LAYER=5
 
 clean:
-	rm search4 lookup4 search5 lookup5
+	del display.exe search4.exe lookup4.exe search5.exe lookup5.exe
