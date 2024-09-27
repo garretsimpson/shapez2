@@ -1,0 +1,94 @@
+LAYER = 1
+
+Found 4 quarters
+Pre-calculated 10 halves
+# shapes: 256
+# halves: 10
+# shapes whose halves aren't stable: 0
+# quarters: 4
+
+LAYER = 2
+
+Found 14 quarters
+Pre-calculated 97 halves
+# shapes: 35281
+# halves: 97
+# shapes whose halves aren't stable: 45
+# quarters: 14
+
+LAYER = 3
+
+Found 46 quarters
+Pre-calculated 905 halves
+# shapes: 3865768
+# halves: 917
+# shapes whose halves aren't stable: 11627
+# quarters: 47
+
+LAYER = 4
+
+...
+# shapes: 349728289
+# halves: 8148
+# shapes whose halves aren't stable: 2002457
+# quarters: 152
+
+LAYER = 5
+
+Found 435 quarters
+Pre-calculated 62670 halves
+# shapes: 26929624298
+# halves: 67669
+# shapes whose halves aren't stable: 251172538
+# quarters: 476
+
+Ideas
+- Create a program to display the first 10 shapes in the shapes list.  DONE
+
+Notes
+- The database always includes the null shape as part of the halves.
+- The database stores key halves and key shapes.
+- The halves are all possible shapes that have one half empty, which includes quarter shapes.
+- So that's 0..2 adjacent quarters.
+- All 1-layer shapes can be made by swapping halves.
+- There are only 9 1-layer key shapes.  All 255 1-layer shapes can be made from these.
+  - Note: need to mirror some shapes, which is not a operation in-game.
+- The shapes are possible shapes that can't be made from the halves by swapping.
+- For example, shapes that require stacking, like S---:SSS-.
+- There are 45 2-layer key shapes that can't be made by swapping halves.
+
+Questions
+- Are there half shapes that can't be made by swapping?  Of course, the stacked ones.
+- Can all 2-layer shapes be made by either swapping or stacking? (Hybrid stacking)
+
+Ideas
+- Implement a shape solver.
+- Need various build methods...
+  - For example: swapping, stacking, hybrid, etc.
+  - All 1-layer shapes can be made by swapping, so the result of the solver only needs to break down to 1-layer shapes.
+- The solver needs to output the list of input shapes (1-layer), and the build instructions (how to assemble them).
+- Maybe call it a build engine.  Or MAM brain.  Or shape solver.  Or solution finder.
+- Also need a method to follow the build instructions to confirm / verify that the solver works.
+- Method
+  - Input a shape.
+  - Determine how to solve it.
+  - Output a solution, which contains a list of 1-layer shapes and build instructions.
+  - Follow the build instructions
+  - Verify the result matches the input
+- Run this for all shapes in the database.
+- Output a list of the shapes that are not found.
+- Figure out a new algorithm how to build them.
+- Update the solver with the new algorithm.
+- Repeat
+- Example, for 2-layer shapes...
+  - The solver can ouput one solution that just unstacks the layers.
+  - The verifer restacks and compares.
+
+Questions
+- Will there be multiple possible solutions?  Yes
+- There might be multiple correct, or only some correct.
+- Either the verifier needs to be part of the solver to determine which is correct, or ...
+- the solver will output multiple possible solutions, and need a verifier for each one.
+
+Notes
+- Will need a notation and data structure for build instructions / solutions.
