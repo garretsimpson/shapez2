@@ -96,6 +96,7 @@ Notes
 Claw   P---P---:P-------:cRCu--Cu:--------
 Snake  P-P-P-P-:------Sy:CgCg--Cg:--Cy----:CwcyCw--
 Piggy  P---P-P-:WrCmCmWr:P-----P-:P-cwSw--:WmcrCrWm
+Other  CuP-P-P-:--P-CuCu:CuCu--P-:--CuCuP-:cr--P-Cu
 
 Test shape "Books" by RunExcept...
 https://discord.com/channels/1000343719314198548/1286691966679126126/1287210914394673162
@@ -106,3 +107,76 @@ Question
 - Are there shapes that are possible in 4-layer mode, that are impossible in 5-layer mode?
 - I think the claw shapes can be made in both, even if they have fewer layers.
 - Are there less than 4 layer shapes only possible in 5-layer mode?
+
+Notes
+- Hybrid stacker/swapper
+  - If the top layer has no crystals, unstack it.
+  - Repeat until layer with a crystal is found.
+  - Cut into quarters (unswap), return each quad for each layer.
+  - Or, for each layer, return layer with pins for crystals, and use crystal gen.
+- This will fail if there are gaps during the swapping.
+
+Ideas
+- Make an SPU to verify the solutions.
+- Solver output is the SPU input.
+- Solution is a list of shapes and instructions.
+- List of shapes [S1, S2, S3, ...]
+- Instuctions
+  - stack
+  - cut left/right
+  - swap
+  - rotate 1,2,3
+  - pin push
+  - crystal
+  - etc.
+
+From SPU...
+ * Instructions
+ *        F - flush stack
+ *        I - input
+ *        O - ouput
+ *      <n> - move shape at index <n> to top of stack
+ *    L,U,R - rotate 90, 180, 270
+ *        C - cut
+ *        S - stack
+ *        X - trash
+
+Ideas
+- Use X for crystal, T for trash, P for pin, etc.
+
+Ideas
+- Write a TMAM algorithm
+
+TMAM algorithm
+- Multiple factories: layer stacker MAM, gapless CMAM, <gap magic>, etc.
+- Analyze / solve
+  - If top layer has no crystals, unstack it and send it to the layer stacker.
+  - Else if top layer has crystals and (the remaining shape has) no gaps, send it to the gapless CMAM.
+  - Else ... <gap magic>
+  - repeat until no layers left.
+- Verify / check
+  - ...
+- Construct / build
+  - ... <gap magic>
+  - gapless CMAM build
+  - layer MAM build
+- Done
+
+Layer Stacker MAM
+- Layers may have solids and gaps and pins.
+- Stacks non-crystal layers on top of each other.
+
+Gapless CMAM
+- Quarter stacker method.
+- Make each quad (multiple layers), and swap them together.
+- Layers may have solids and pins(?) and crystals.
+- Assume each layer can have multiple crystal colors, so each crystal must be made one quarter at a time.
+- Assumes all layers below are also gapless
+- Issue: Are pins okay?  Probably not below a crystal.
+- Question: The top layer could have gaps - is this useful?
+
+Issues
+- Breaking crystal techniques...
+  - Creating gaps under crystals ("drops") requires breaking crystal layers.
+  - Crating gaps under shelves supported by crystal requires breaking cystal stacks.
+
