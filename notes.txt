@@ -98,6 +98,8 @@ Snake  P-P-P-P-:------Sy:CgCg--Cg:--Cy----:CwcyCw--
 Piggy  P---P-P-:WrCmCmWr:P-----P-:P-cwSw--:WmcrCrWm
 Other  CuP-P-P-:--P-CuCu:CuCu--P-:--CuCuP-:cr--P-Cu
 
+??? {P-Cg--P-:crCg--P-:crP-Cucr:crP-Cg--:crCgP-Cu} the Cu's must be swapped in on this shape
+
 Test shape "Books" by RunExcept...
 https://discord.com/channels/1000343719314198548/1286691966679126126/1287210914394673162
 
@@ -147,7 +149,7 @@ Ideas
 Ideas
 - Write a TMAM algorithm
 
-TMAM algorithm
+TMAM algorithm 0.1
 - Multiple factories: layer stacker MAM, gapless CMAM, <gap magic>, etc.
 - Analyze / solve
   - If top layer has no crystals, unstack it and send it to the layer stacker.
@@ -161,6 +163,15 @@ TMAM algorithm
   - gapless CMAM build
   - layer MAM build
 - Done
+
+TMAM Shape Solver 0.2
+1> Unstack all stackable layers from the top and send to the layer stacking MAM.
+2> If the remaining shape is gapless, send it to the quad swapping CMAM.
+3> Else if the remaining shape can be made by swapping two stable half shapes - send the half shapes to two half-shape TMAMs.
+4> Else <TBD>
+
+- #1 - Maybe also any remaining pins that can be stacked on top?
+- Is it better to combine #2 and #3?  A CMAM could create half-shapes, but all of them?
 
 Layer Stacker MAM
 - Layers may have solids and gaps and pins.
@@ -180,3 +191,45 @@ Issues
   - Creating gaps under crystals ("drops") requires breaking crystal layers.
   - Crating gaps under shelves supported by crystal requires breaking cystal stacks.
 
+Idea
+- Store the operation that made the new shape.
+- This would at make at least one way to create the shape.
+- Not sure if need to store the input shapes, or just the operation would be enough.
+- rotate (not needed), stack (I think this only stacks one layer on top), swap (not needed)
+- crystal (maybe assume all crystyals where created in the last step?)
+- pin push - probably complicated to figure out input shape.
+
+Idea
+- Verify that the fat shape list (non-halves) is correct.
+- Check each fat shape to see if is made from stable halves.
+- Cut a fat shape in half (both ways) and reassemble.  Should make a new shape in both ways.
+- Report the ones that fail.
+
+Idea
+- Shape solver
+- Use the known list to find solutions.
+- First, do a second pass on the known list to make sure the thin and fat shapes are correct.
+- Re-create the list of all quarter shapes (verify that they are complete by cutting all known shapes)
+- Re-create the list of one-layer shapes (for stacking on top).
+- Find shapes of increasing operational complexity...  (not sure how)
+- For example
+  - Using just thin shapes, make all shapes that are swapped (this should be the same as the thin list).
+  - Then do crystal, then stacking, then pin pushing, ???
+- Issue: Are there shapes that need more than one step?  Probably.
+  - Other than crystal and pin push...
+- Record found shapes in different lists according to the operation used to make them,
+- Or, store a structure for each new shape found with operations, and maybe the input shapes.
+- Write a file (new file format) with solutions.
+
+Idea
+- Find shapes that can only be made that require parts to fall doing a pin pushed crystal break.
+
+Notes
+- Might have found a bug in collapse.
+- How does it handle hanging crystals?
+- How does it handle shapes supported by a hanging crystal?
+- Okay, looks good so far.
+- It finds all suported parts first and keeps them.
+- Everything else is falling parts.
+- Breaks all crystals in the falling parts.
+- Finds connected parts on each layer (bottom up) and stacks them from their current positions.

@@ -254,6 +254,10 @@ struct Searcher {
     std::cout << "# shapes whose halves aren't stable: " << shapes.size()
               << std::endl;
     std::cout << "# quarters: " << quarters.size() << std::endl;
+
+    for (Shape shape : singleLayerShapes) {
+      std::cout << shape.toString() << std::endl;
+    }
   }
 
   void process(Shape shape) {
@@ -315,7 +319,7 @@ struct Searcher {
 
 int main(int argc, char *argv[]) {
   Shapez::Searcher searcher;
-  searcher.run();
+  // searcher.run();
   searcher.summarize();
 
   if (argc >= 2) {

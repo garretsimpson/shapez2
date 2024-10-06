@@ -1,19 +1,13 @@
-ALL : display.exe search4.exe lookup4.exe search5.exe lookup5.exe
+APPS := $(addprefix bin\,$(addsuffix .exe,display search lookup solver search5 lookup5 display5))
+CFLAGS := -static -std=c++23 -O3
 
-display.exe : display.cpp shapez.hpp
-	g++ -o display display.cpp -static -std=c++23 -O3
+all: $(APPS)
 
-search4.exe : search.cpp shapez.hpp
-	g++ -o search4 search.cpp -static -std=c++23 -O3
+bin\\%5.exe : src\%.cpp src\shapez.hpp
+	g++ -o $@ $< $(CFLAGS) -DCONFIG_LAYER=5
 
-lookup4.exe : lookup.cpp shapez.hpp
-	g++ -o lookup4 lookup.cpp -static -std=c++23 -O3
-
-search5.exe : search.cpp shapez.hpp
-	g++ -o search5 search.cpp -static -std=c++23 -O3 -DCONFIG_LAYER=5
-
-lookup5.exe : lookup.cpp shapez.hpp
-	g++ -o lookup5 lookup.cpp -static -std=c++23 -O3 -DCONFIG_LAYER=5
+bin\\%.exe : src\%.cpp src\shapez.hpp
+	g++ -o $@ $< $(CFLAGS)
 
 clean:
-	del display.exe search4.exe lookup4.exe search5.exe lookup5.exe
+	del $(APPS)
