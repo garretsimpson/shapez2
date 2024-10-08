@@ -17,22 +17,16 @@ int main(int argc, char* argv[]) {
   ShapeSet set = ShapeSet::load(argv[1]);
   // ska::bytell_hash_set<Shape> halves{set.halves.begin(), set.halves.end()};
 
-  Shape shape;
-  size_t num;
-
   std::cout << "Halves: " << set.halves.size() << std::endl;
-  num = set.halves.size();
-  for (size_t i = 0; i < num; ++i) {
-    shape = set.halves[i];
-    std::cout << shape.toString() << std::endl;
+  std::cout << "Shapes: " << set.solutions.size() << std::endl;
+
+  for (auto it : set.halves) {
+    std::cout << it.toString() << std::endl;
   }
   std::cout << std::endl;
 
-  std::cout << "Shapes: " << set.shapes.size() << std::endl;
-  num = set.shapes.size();
-  for (size_t i = 0; i < num; ++i) {
-    shape = set.shapes[i];
-    std::cout << shape.toString() << std::endl;
+  for (auto it : set.solutions) {
+    std::cout << it.toString() << std::endl;
   }
   std::cout << std::endl;
 

@@ -284,8 +284,32 @@ P--P:SSS-:----:---- <- PP(cc--:cc--:cSSS:c---)
 - It might never find other solutions, maybe?
 
 Idea
-- Read / Write solutions file
+- Write solutions file DONE
 
 Issues
 - For the solutions table, should the key be the shape value instead of the shape?
 - Might be smaller / faster, IDK.
+
+Idea
+- Solution viewer
+- Input a shape
+- Read solutions file, recursively find solutions.
+
+Some 2-layer shape biulds...
+
+C:\Users\garre\Projects\shapez2>bin\search2.exe s2 ss2
+Found 14 quarters
+Pre-calculated 97 halves
+# shapes: 35281
+# halves: 97
+# shapes whose halves aren't stable: 45
+# quarters: 14
+-P-P:SSSP <- ST(P-P-:P---, ----:SSS-)
+c---:SSS- <- ST(c---:----, ----:SSS-)
+-c-P:SSSP <- ST(P-c-:P---, ----:SSS-)
+c--S:SSSP <- ST(Sc--:P---, ----:SSS-)
+S--P:SSS- <- ST(SP--:----, ----:SSS-)
+...
+
+# bin\solve.exe ss2 -P-P:SSSP:----:----
+

@@ -462,21 +462,75 @@ struct Shape {
   }
 };
 
+enum class Op {
+  Rotate,
+  Stack,
+  Swap,
+  Crystal,
+  PinPush,
+};
+
+inline std::string opCode(Op op) {
+  switch (op) {
+    case Op::Rotate:
+      return "RR";
+    case Op::Stack:
+      return "ST";
+    case Op::Swap:
+      return "SW";
+    case Op::Crystal:
+      return "XX";
+    case Op::PinPush:
+      return "PP";
+  }
+  std::unreachable();
+}
+
+struct Build {
+  Op op;
+  Shape shape1;
+  Shape shape2;
+
+  std::string toString() const {
+    std::string ret = "";
+    ret += opCode(op) + "(";
+    if (shape1.value) ret += shape1.toString();
+    if (shape2.value) ret += ", " + shape2.toString();
+    ret += ")";
+    return ret;
+  }
+};
+
+struct Solution {
+  Shape shape;
+  Build build;
+
+  constexpr bool operator<(const Solution &o) const {
+    return shape.value < o.shape.value;
+  }
+
+  std::string toString() const {
+    return shape.toString() + " <- " + build.toString();
+  }
+};
+
 struct ShapeSet {
   std::vector<Shape> halves;
-  std::vector<Shape> shapes;
+  std::vector<Solution> solutions;
 
   void save(const std::string &filename) const {
     using namespace std;
     ofstream file{filename, ios::out | ios::binary | ios::trunc};
-    uint32_t size = halves.size();
+    uint32_t size;
+
+    size = halves.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
     file.write(reinterpret_cast<const char *>(halves.data()),
                size * sizeof(Shape));
-    size = shapes.size();
+    size = solutions.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(shapes.data()),
-               size * sizeof(Shape));
+    file.write(reinterpret_cast<const char *>(solutions.data()),
+               size * sizeof(Solution));
   }
 
   static ShapeSet load(const std::string &filename) {
@@ -484,14 +538,15 @@ struct ShapeSet {
     ShapeSet ret;
     ifstream file{filename, ios::in | ios::binary};
     uint32_t size;
+
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.halves.resize(size);
     file.read(reinterpret_cast<char *>(ret.halves.data()),
               size * sizeof(Shape));
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
-    ret.shapes.resize(size);
-    file.read(reinterpret_cast<char *>(ret.shapes.data()),
-              size * sizeof(Shape));
+    ret.solutions.resize(size);
+    file.read(reinterpret_cast<char *>(ret.solutions.data()),
+              size * sizeof(Solution));
     return ret;
   }
 };

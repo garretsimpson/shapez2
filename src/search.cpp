@@ -9,51 +9,6 @@
 
 namespace Shapez {
 
-enum class Op {
-  Rotate,
-  Stack,
-  Swap,
-  Crystal,
-  PinPush,
-};
-
-inline std::string opCode(Op op) {
-  switch (op) {
-    case Op::Rotate:
-      return "RR";
-    case Op::Stack:
-      return "ST";
-    case Op::Swap:
-      return "SW";
-    case Op::Crystal:
-      return "XX";
-    case Op::PinPush:
-      return "PP";
-  }
-  std::unreachable();
-}
-
-struct Build {
-  Op op;
-  Shape shape1;
-  Shape shape2;
-};
-
-struct Solution {
-  Shape shape;
-  Build build;
-
-  std::string toString() const {
-    std::string ret = "";
-    ret += shape.toString() + " <- ";
-    ret += opCode(build.op) + "(";
-    if (build.shape1.value) ret += build.shape1.toString();
-    if (build.shape2.value) ret += ", " + build.shape2.toString();
-    ret += ")";
-    return ret;
-  }
-};
-
 // Search possible quads. This searcher is conservative, which means that
 // it may omit some quads, but any quad found by it is always makeable.
 struct ConservativeQuadSearcher {
@@ -304,6 +259,12 @@ struct Searcher {
     std::cout << "# shapes whose halves aren't stable: " << shapes.size()
               << std::endl;
     std::cout << "# quarters: " << quarters.size() << std::endl;
+
+    //   Shape shape;
+    //   for (auto it : singleLayerShapes) {
+    //     shape = Shape(it.value >> 2 * PART * (LAYER - 1));
+    //     std::cout << shape.toString() << std::endl;
+    //   }
   }
 
   void process(Shape shape) {
@@ -336,8 +297,11 @@ struct Searcher {
     }
 
     // stack
+    Shape top;
     for (Shape piece : singleLayerShapes) {
-      enqueue(shape.stack(piece), Build{Op::Stack, shape, piece});
+      // TODO: Fix the top piece during post processing
+      top = Shape(piece.value >> 2 * PART * (LAYER - 1));
+      enqueue(shape.stack(piece), Build{Op::Stack, shape, top});
     }
 
     // pin pusher
@@ -369,33 +333,6 @@ struct Searcher {
   }
 };
 
-struct SolutionSet {
-  std::vector<Solution> solutions;
-
-  void save(const std::string &filename) const {
-    using namespace std;
-    ofstream file{filename, ios::out | ios::binary | ios::trunc};
-
-    uint32_t size = solutions.size();
-    file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(solutions.data()),
-               size * sizeof(Solution));
-  }
-
-  static SolutionSet load(const std::string &filename) {
-    using namespace std;
-    SolutionSet ret;
-    ifstream file{filename, ios::in | ios::binary};
-    uint32_t size;
-
-    file.read(reinterpret_cast<char *>(&size), sizeof(size));
-    ret.solutions.resize(size);
-    file.read(reinterpret_cast<char *>(ret.solutions.data()),
-              size * sizeof(Solution));
-    return ret;
-  }
-};
-
 }  // namespace Shapez
 
 int main(int argc, char *argv[]) {
@@ -407,25 +344,20 @@ int main(int argc, char *argv[]) {
     Shapez::ShapeSet set;
     set.halves.insert(set.halves.end(), searcher.halves.begin(),
                       searcher.halves.end());
-    set.shapes.insert(set.shapes.end(), searcher.shapes.begin(),
-                      searcher.shapes.end());
     std::sort(set.halves.begin(), set.halves.end());
-    std::sort(set.shapes.begin(), set.shapes.end());
-    set.save(argv[1]);
-  }
-
-  if (argc >= 3) {
-    Shapez::SolutionSet set;
-    size_t size = searcher.builds.size();
-    set.solutions.resize(size);
+    set.solutions.resize(searcher.builds.size());
     Shapez::Solution solution;
     size_t i = 0;
     for (auto it : searcher.builds) {
       solution = {it.first, it.second};
       set.solutions[i++] = solution;
-      std::cout << solution.toString() << std::endl;
     }
-    set.save(argv[2]);
+    std::sort(set.solutions.begin(), set.solutions.end());
+    set.save(argv[1]);
+
+    for (auto it : set.solutions) {
+      std::cout << it.toString() << std::endl;
+    }
   }
 
   return 0;
