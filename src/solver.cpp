@@ -27,6 +27,7 @@ struct Solver {
       Shape right{shape.rotate(angle + PART / 2).value & mask};
       // std::cout << left.toString() << std::endl;
       // std::cout << right.toString() << std::endl;
+      // TODO: Use shape.collapse()
       left = left.equivalentHalves()[0];
       right = right.equivalentHalves()[0];
       if (left.value == 0 || right.value == 0) return true;

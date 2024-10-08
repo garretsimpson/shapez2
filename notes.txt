@@ -200,17 +200,18 @@ Idea
 - pin push - probably complicated to figure out input shape.
 
 Idea
-- Verify that the fat shape list (non-halves) is correct.
+- Verify that the fat shape list (non-halves) is correct.  DONE
 - Check each fat shape to see if is made from stable halves.
 - Cut a fat shape in half (both ways) and reassemble.  Should make a new shape in both ways.
+- Or rather, that the two halves are both in the halves list.
 - Report the ones that fail.
 
 Idea
 - Shape solver
 - Use the known list to find solutions.
-- First, do a second pass on the known list to make sure the thin and fat shapes are correct.
+- First, do a second pass on the known list to make sure the thin and fat shapes are correct.  DONE (well, at least they are self-consistent)
 - Re-create the list of all quarter shapes (verify that they are complete by cutting all known shapes)
-- Re-create the list of one-layer shapes (for stacking on top).
+- Re-create the list of one-layer shapes (for stacking on top).  DONE (there are only 17)
 - Find shapes of increasing operational complexity...  (not sure how)
 - For example
   - Using just thin shapes, make all shapes that are swapped (this should be the same as the thin list).
@@ -220,6 +221,7 @@ Idea
 - Record found shapes in different lists according to the operation used to make them,
 - Or, store a structure for each new shape found with operations, and maybe the input shapes.
 - Write a file (new file format) with solutions.
+- Maybe append the solutions to the existing file, or just write different file.
 
 Idea
 - Find shapes that can only be made that require parts to fall doing a pin pushed crystal break.
@@ -233,3 +235,57 @@ Notes
 - Everything else is falling parts.
 - Breaks all crystals in the falling parts.
 - Finds connected parts on each layer (bottom up) and stacks them from their current positions.
+
+Notes
+- Implemented shape verify to check all the non-half shapes for any that could be made by swapping halves.  Did not find any.
+
+Complete list of single layer shapes that are used by stack()...
+----:----:----:P---
+----:----:----:-P--
+----:----:----:--P-
+----:----:----:---P
+----:----:----:S---
+----:----:----:---S
+----:----:----:--S-
+----:----:----:-S--
+----:----:----:SS--
+----:----:----:S--S
+----:----:----:--SS
+----:----:----:-SS-
+----:----:----:SSS-
+----:----:----:SS-S
+----:----:----:S-SS
+----:----:----:-SSS
+----:----:----:SSSS
+
+Note that they are on the top layer before being passed to stack().
+
+Idea
+- Make a solver for just the thin shapes to begin with.
+- Tackle fat shapes later.
+
+Issue
+- Need a way to check if a full shape is really composed of two or more thin shapes.
+
+Notes
+- Modified searcher to remember how to build each shape and output list of solutions for each of the fat shapes.
+- The number of solutions matches the number of fat shapes... 2002457
+- They are all Stack and PinPush.
+- I guess if Crystal was last, then the shape would be swappable (made from possible halves).
+- There are 4967 PinPush shapes.
+- I see this one...
+P--P:SSS-:----:---- <- PP(cc--:cc--:cSSS:c---)
+- That looks like a regular stackable shape.
+- It does a crystal break, but doesn't need to to make this shape.
+- Could try saving only the first? solution found, rather than the last?
+- I think its recording the first one.
+- Or, going to need some scoring system to decide which solution to keep.
+- Perfer Stack over Pin Push, maybe?
+- It might never find other solutions, maybe?
+
+Idea
+- Read / Write solutions file
+
+Issues
+- For the solutions table, should the key be the shape value instead of the shape?
+- Might be smaller / faster, IDK.

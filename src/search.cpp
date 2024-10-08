@@ -9,6 +9,51 @@
 
 namespace Shapez {
 
+enum class Op {
+  Rotate,
+  Stack,
+  Swap,
+  Crystal,
+  PinPush,
+};
+
+inline std::string opCode(Op op) {
+  switch (op) {
+    case Op::Rotate:
+      return "RR";
+    case Op::Stack:
+      return "ST";
+    case Op::Swap:
+      return "SW";
+    case Op::Crystal:
+      return "XX";
+    case Op::PinPush:
+      return "PP";
+  }
+  std::unreachable();
+}
+
+struct Build {
+  Op op;
+  Shape shape1;
+  Shape shape2;
+};
+
+struct Solution {
+  Shape shape;
+  Build build;
+
+  std::string toString() const {
+    std::string ret = "";
+    ret += shape.toString() + " <- ";
+    ret += opCode(build.op) + "(";
+    if (build.shape1.value) ret += build.shape1.toString();
+    if (build.shape2.value) ret += ", " + build.shape2.toString();
+    ret += ")";
+    return ret;
+  }
+};
+
 // Search possible quads. This searcher is conservative, which means that
 // it may omit some quads, but any quad found by it is always makeable.
 struct ConservativeQuadSearcher {
@@ -90,6 +135,9 @@ struct Searcher {
   ska::bytell_hash_set<Shape> queueSet;
   // the next half to be processed
   size_t nextHalf = 0;
+
+  // Builds
+  ska::bytell_hash_map<Shape, Build> builds;
 
   // All the possible connected shapes that consist of pins and regular
   // shapes. They cover all the cases for stacking another shape on top
@@ -219,6 +267,7 @@ struct Searcher {
                 // process it immediately.
                 queueSet.erase(it);
                 shapes.erase(shape);
+                builds.erase(shape);
                 process(shape);
               } else if (auto it = shapes.find(shape); it != shapes.end()) {
                 // We thought the shape is in category two,
@@ -227,6 +276,7 @@ struct Searcher {
                 // the shape from category two, and don't
                 // process it again.
                 shapes.erase(it);
+                builds.erase(shape);
               } else {
                 process(shape);
               }
@@ -254,10 +304,6 @@ struct Searcher {
     std::cout << "# shapes whose halves aren't stable: " << shapes.size()
               << std::endl;
     std::cout << "# quarters: " << quarters.size() << std::endl;
-
-    for (Shape shape : singleLayerShapes) {
-      std::cout << shape.toString() << std::endl;
-    }
   }
 
   void process(Shape shape) {
@@ -291,27 +337,62 @@ struct Searcher {
 
     // stack
     for (Shape piece : singleLayerShapes) {
-      enqueue(shape.stack(piece));
+      enqueue(shape.stack(piece), Build{Op::Stack, shape, piece});
     }
 
     // pin pusher
-    enqueue(shape.pin());
+    enqueue(shape.pin(), Build{Op::PinPush, shape, Shape{0}});
 
     // crystal generator
-    enqueue(shape.crystalize());
+    enqueue(shape.crystalize(), Build{Op::Crystal, shape, Shape{0}});
   }
 
-  void enqueue(Shape shape) {
+  void enqueue(Shape shape, Build build) {
     if (combinable(shape)) {
       return;
     }
 
     shape = shape.equivalentShapes()[0];
-
     if (shapes.emplace(shape).second) {
       queue.push_back(shape);
       queueSet.insert(shape);
     }
+
+    if (builds.find(shape) == builds.end()) {
+      build.shape1 = build.shape1.equivalentShapes()[0];
+      build.shape2 = build.shape2.equivalentShapes()[0];
+      builds.emplace(shape, build);
+    } else {
+      // Duplicate shape found
+      // TODO: Choose which build to store
+    }
+  }
+};
+
+struct SolutionSet {
+  std::vector<Solution> solutions;
+
+  void save(const std::string &filename) const {
+    using namespace std;
+    ofstream file{filename, ios::out | ios::binary | ios::trunc};
+
+    uint32_t size = solutions.size();
+    file.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    file.write(reinterpret_cast<const char *>(solutions.data()),
+               size * sizeof(Solution));
+  }
+
+  static SolutionSet load(const std::string &filename) {
+    using namespace std;
+    SolutionSet ret;
+    ifstream file{filename, ios::in | ios::binary};
+    uint32_t size;
+
+    file.read(reinterpret_cast<char *>(&size), sizeof(size));
+    ret.solutions.resize(size);
+    file.read(reinterpret_cast<char *>(ret.solutions.data()),
+              size * sizeof(Solution));
+    return ret;
   }
 };
 
@@ -319,7 +400,7 @@ struct Searcher {
 
 int main(int argc, char *argv[]) {
   Shapez::Searcher searcher;
-  // searcher.run();
+  searcher.run();
   searcher.summarize();
 
   if (argc >= 2) {
@@ -332,5 +413,20 @@ int main(int argc, char *argv[]) {
     std::sort(set.shapes.begin(), set.shapes.end());
     set.save(argv[1]);
   }
+
+  if (argc >= 3) {
+    Shapez::SolutionSet set;
+    size_t size = searcher.builds.size();
+    set.solutions.resize(size);
+    Shapez::Solution solution;
+    size_t i = 0;
+    for (auto it : searcher.builds) {
+      solution = {it.first, it.second};
+      set.solutions[i++] = solution;
+      std::cout << solution.toString() << std::endl;
+    }
+    set.save(argv[2]);
+  }
+
   return 0;
 }
