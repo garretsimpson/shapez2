@@ -355,9 +355,9 @@ int main(int argc, char *argv[]) {
     std::sort(set.solutions.begin(), set.solutions.end());
     set.save(argv[1]);
 
-    for (auto it : set.solutions) {
-      std::cout << it.toString() << std::endl;
-    }
+    // for (auto it : set.solutions) {
+    //   std::cout << it.toString() << std::endl;
+    // }
   }
 
   return 0;

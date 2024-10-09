@@ -1,7 +1,8 @@
-APPS := $(addprefix bin\,$(addsuffix .exe,display search lookup solver search5 lookup5 display5))
+APPS := display lookup search solve display5 lookup5 search5 solve5
+FILES := $(addprefix bin\,$(addsuffix .exe,$(APPS)))
 CFLAGS := -static -std=c++23 -O3
 
-all: $(APPS)
+all: $(FILES)
 
 bin\\%5.exe : src\%.cpp src\shapez.hpp
 	g++ -o $@ $< $(CFLAGS) -DCONFIG_LAYER=5
@@ -10,4 +11,4 @@ bin\\%.exe : src\%.cpp src\shapez.hpp
 	g++ -o $@ $< $(CFLAGS)
 
 clean:
-	del $(APPS)
+	del $(FILES)

@@ -105,7 +105,7 @@ https://discord.com/channels/1000343719314198548/1286691966679126126/12872109143
 
 Drop Book?
 
-Question
+Questions
 - Are there shapes that are possible in 4-layer mode, that are impossible in 5-layer mode?
 - I think the claw shapes can be made in both, even if they have fewer layers.
 - Are there less than 4 layer shapes only possible in 5-layer mode?
@@ -311,5 +311,5 @@ c--S:SSSP <- ST(Sc--:P---, ----:SSS-)
 S--P:SSS- <- ST(SP--:----, ----:SSS-)
 ...
 
-# bin\solve.exe ss2 -P-P:SSSP:----:----
+# bin\solve.exe s2 -P-P:SSSP:----:----
 
