@@ -122,6 +122,7 @@ struct Shape {
         }
       }
     }
+    // repr += '|' + std::to_string(bitCount());
     return repr;
   }
 
@@ -460,6 +461,9 @@ struct Shape {
       return {*this};
     }
   }
+
+  // Count the bits set
+  constexpr size_t bitCount() const { return std::popcount(value); }
 };
 
 enum class Op {
@@ -491,12 +495,17 @@ struct Build {
   Shape shape1;
   Shape shape2;
 
+  constexpr size_t getCost() const {
+    return shape1.bitCount() + shape2.bitCount();
+  }
+
   std::string toString() const {
     std::string ret = "";
     ret += opCode(op) + "(";
     if (shape1.value) ret += shape1.toString();
     if (shape2.value) ret += ", " + shape2.toString();
-    ret += ")";
+    ret += ") ";
+    ret += std::to_string(getCost());
     return ret;
   }
 };

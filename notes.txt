@@ -60,6 +60,8 @@ Notes
 Questions
 - Are there half shapes that can't be made by swapping?  Of course, the stacked ones.
 - Can all 2-layer shapes be made by either swapping or stacking? (Hybrid stacking)
+- Yes - there are no 2-layers that require crystal as the last step.
+- Note: this was done with CONFIG_LAYER 2.  Need to recheck with LAYER 4 or 5.
 
 Ideas
 - Implement a shape solver.
@@ -93,7 +95,7 @@ Questions
 Notes
 - Will need a notation and data structure for build instructions / solutions.
 
-Claw   P---P---:P-------:cRCu--Cu:--------
+Claw   P---P---:P-------:crCu--Cu:--------
 Snake  P-P-P-P-:------Sy:CgCg--Cg:--Cy----:CwcyCw--
 Piggy  P---P-P-:WrCmCmWr:P-----P-:P-cwSw--:WmcrCrWm
 Other  CuP-P-P-:--P-CuCu:CuCu--P-:--CuCuP-:cr--P-Cu
@@ -278,7 +280,7 @@ P--P:SSS-:----:---- <- PP(cc--:cc--:cSSS:c---)
 - That looks like a regular stackable shape.
 - It does a crystal break, but doesn't need to to make this shape.
 - Could try saving only the first? solution found, rather than the last?
-- I think its recording the first one.
+- I think it is recording the first one.
 - Or, going to need some scoring system to decide which solution to keep.
 - Perfer Stack over Pin Push, maybe?
 - It might never find other solutions, maybe?
@@ -313,3 +315,151 @@ S--P:SSS- <- ST(SP--:----, ----:SSS-)
 
 # bin\solve.exe s2 -P-P:SSSP:----:----
 
+Conjecture: A possible shape can be classified by the final operation used to make it.
+It is either a swap, stack, or pin push.  (crystal is equivalent to swap).
+We think we know how to make make all swap shapes.  But now we are trying to distinguish stack from pin push.
+
+For example, if we can identify the shape as a stack, and part that was stacked, we can undo the stack operation
+and now we have a new shape.  If it now a pin push shape, we can find the "snake" (and possible falling parts)
+and undo the pin push.  If we can reduce it to a swap shape, then we know how to find the solution.
+
+Ideas
+- Don't sort the results.
+- Print DONE on exit.
+- Reduce size of memory and dump file.  Store pair<shape, build>?
+  - write test() method to display various data struct sizes.
+- find all builds to one shape, like the claw.
+  - help dertermine which build is best to store.
+
+Notes
+- Ran the search for 5-layer solutions.
+- Took 12? hours, wrote the halves, but only 128 solutions to the dump file.
+- And hung.
+- The Windows memory was very full and did some swapping during the run.
+- Maybe the length is too long?  Need to check what the actual number is and the size of the size field.
+
+Claw: PP(-c-P:ScSc:ccc-:c---)
+Claw: PP(c-P-:cScS:c--c:cS--)
+Claw: PP(c-P-:cScS:cc-c:c---)
+Claw: PP(-P-c:ScSc:c-cc:cSS-)
+Claw: PP(c-P-:cScS:cc--:cSSS)
+Claw: PP(c-P-:cScS:cc-c:cSS-)
+Claw: PP(-P-c:ScSc:c-cc:cS--)
+Claw: PP(-P-c:ScSc:c-cc:cSP-)
+Claw: PP(-P-c:ScSc:c--c:cS--)
+Claw: PP(-P-c:ScSc:c-cc:cSc-)
+Claw: PP(-c-P:ScSc:cc--:cSSS)
+Claw: PP(c-P-:cScS:cc--:ccSS)
+Claw: PP(P-c-:cScS:-ccc:ScP-)
+Claw: PP(c-P-:cScS:cc-c:ScS-)
+Claw: PP(c-P-:cScS:cc-c:ccS-)
+Claw: PP(-P-c:ScSc:c-cc:cSPP)
+Claw: PP(P-c-:cScS:-cc-:ScP-)
+Claw: PP(-P-c:ScSc:c-cc:cSSP)
+Claw: PP(-c-P:ScSc:ccc-:cP--)
+Claw: PP(-P-c:ScSc:c-cc:cScP)
+Claw: PP(c-P-:cScS:cc-c:ScSP)
+Claw: PP(-c-P:ScSc:ccc-:c-P-)
+Claw: PP(-c-P:ScSc:-cc-:ScP-)
+Claw: PP(c-P-:cScS:cc-c:cP--)
+Claw: PP(-c-P:ScSc:ccc-:cPP-)
+Claw: PP(c-P-:cScS:cc-c:cSSP)
+Claw: PP(c-P-:cScS:cc-c:ccSP)
+Claw: PP(-c-P:ScSc:ccc-:PcP-)
+Claw: PP(c-P-:cScS:cc--:ScS-)
+Claw: PP(-c-P:ScSc:cc--:c---)
+Claw: PP(c-P-:cScS:c---:cS--)
+Claw: PP(c-P-:cScS:cc--:c---)
+Claw: PP(-c-P:ScSc:cc--:cP--)
+Claw: PP(c-P-:cScS:cc--:cP--)
+Claw: PP(c-P-:cScS:cc--:cSS-)
+Claw: PP(c-P-:cScS:cc--:ccS-)
+Claw: PP(c-P-:cScS:c---:c---)
+Claw: PP(-c-P:ScSc:ccc-:cSSS)
+Claw: PP(-c-P:ScSc:ccc-:cS--)
+Claw: PP(-c-P:ScSc:ccc-:cScS)
+Claw: PP(-c-P:ScSc:ccc-:cSP-)
+Claw: PP(-c-P:ScSc:cc--:cS--)
+Claw: PP(-c-P:ScSc:ccc-:c-S-)
+Claw: PP(-c-P:ScSc:cc--:ScS-)
+Claw: PP(c-P-:cScS:cc-c:cS--)
+Claw: PP(-c-P:ScSc:ccc-:cPS-)
+Claw: PP(-c-P:ScSc:ccc-:ScP-)
+Claw: PP(c-P-:cScS:cc--:cS--)
+Claw: PP(-c-P:ScSc:ccc-:cSS-)
+Claw: PP(c-P-:cScS:cc-c:cSSS)
+Claw: PP(-c-P:ScSc:ccc-:ccSS)
+Claw: PP(-c-P:ScSc:ccc-:ScS-)
+Claw: PP(-c-P:ScSc:ccc-:c-c-)
+Claw: PP(-c-P:ScSc:cc--:cSS-)
+Claw: PP(-c-P:ScSc:cc--:ccS-)
+Claw: PP(-c-P:ScSc:ccc-:cc--)
+Claw: PP(-c-P:ScSc:ccc-:cPc-)
+Claw: PP(-c-P:ScSc:ccc-:ccP-)
+Claw: PP(c-P-:cScS:cc--:cc--)
+Claw: PP(-c-P:ScSc:ccc-:cSc-)
+Claw: PP(-c-P:ScSc:ccc-:ccS-)
+Claw: PP(-c-P:ScSc:ccc-:cccS)
+Claw: PP(-c-P:ScSc:ccc-:ccc-)
+Claw: PP(-c-P:ScSc:cc--:cScS)
+Claw: PP(-c-P:ScSc:cc--:cSc-)
+Claw: PP(-c-P:ScSc:-cc-:cc--)
+Claw: PP(-c-P:ScSc:-cc-:ccSS)
+Claw: PP(-c-P:ScSc:cc--:cccS)
+Claw: PP(-c-P:ScSc:-cc-:ccP-)
+Claw: PP(c-P-:cScS:c---:cc--)
+Claw: PP(-c-P:ScSc:-cc-:ccS-)
+Claw: PP(-c-P:ScSc:cc--:ccc-)
+
+72 ways of making the claw
+
+Debug shape: P--P:SSS-:----:----
+
+first build found...
+DEBUG: PP(cc--:cc--:cSSS:c---)
+
+Others...
+DEBUG: PP(cc--:cc--:cSSS:cS--)
+DEBUG: PP(cc--:cc--:cSSS:cc--)
+DEBUG: PP(cc--:cc--:cSSS:cP--)
+DEBUG: PP(-cc-:ScSS:cc--:c---)
+DEBUG: PP(cc--:cc--:cSSS:cSP-)
+DEBUG: PP(cc--:cc--:cSSS:cSS-)
+DEBUG: PP(cc--:cc--:cSSS:cSc-)
+
+Other ways that use stack...
+DEBUG: ST(PP--:----:----:----, SSS-:----:----:----)
+DEBUG: ST(PP--:----:----:----, SSS-:----:----:----)
+DEBUG: ST(P---:SSS-:----:----, P---:----:----:----)
+
+Ideas
+- To reduce memory, need to replace shape hash set with a build has table.  Not use both.
+- But the changes may be too invasive.
+
+Notes
+- Implmented countBits() which just calls popcount().
+- So solids and pins count 1 and crystals count 2.
+
+DEBUG: P--P:SSS-:----:----
+DEBUG: ST(PP--:----:----:----|2, SSS-:----:----:----|3)
+DEBUG: ST(P---:SSS-:----:----|4, P---:----:----:----|1)
+DEBUG: PP(cc--:cSSS:c---:c---|13)
+DEBUG: PP(c--c:cSSS:c---:cS--|14)
+DEBUG: PP(cc--:cc--:cSSS:c---|15)
+DEBUG: PP(cc--:cc--:cSSS:cS--|16)
+
+CLAW: P---P---:P-------:crCu--Cu:--------
+CLAW: PP(c-P-:cScS:c---:c---|13)
+CLAW: PP(c-P-:cScS:c---:cS--|14)
+CLAW: PP(-c-P:ScSc:cc--:c---|15)
+CLAW: PP(c-P-:cScS:c--c:cS--|16)
+CLAW: PP(-c-P:ScSc:ccc-:c---|17)
+
+Idea
+- If there's a tie in the score, then count total number of layers.
+
+Without making key parts...
+DEBUG: P--P:SSS-:----:----
+DEBUG: ST(PP--:----:----:----|2, S-SS:----:----:----|3)
+DEBUG: ST(PP--:----:----:----|2, -SSS:----:----:----|3)
+DEBUG: ST(P---:SSS-:----:----|4, ---P:----:----:----|1)

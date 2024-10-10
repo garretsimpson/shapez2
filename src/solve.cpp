@@ -48,7 +48,7 @@ struct Solve {
     if (swapShapes.has_value()) {
       if (swapShapes->first.value == 0 || swapShapes->second.value == 0) {
         // one half shape
-        result += shape.toString() + "\n";
+        result += shape.toString() + " <>\n";
       } else {
         // two half shapes that can swapped
         Build build{Op::Swap, swapShapes->first, swapShapes->second};
@@ -61,10 +61,10 @@ struct Solve {
       Shape shape1 = solution.build.shape1;
       Shape shape2 = solution.build.shape2;
       result += solution.toString() + "\n";
-      if (shape1.value != 0) result += run(shape1, ++indent);
-      if (shape2.value != 0) result += run(shape2, ++indent);
+      if (shape1.value != 0) result += run(shape1, indent + 1);
+      if (shape2.value != 0) result += run(shape2, indent + 1);
     } else {
-      result = "Not found";
+      result = "Not found\n";
     }
     return result;
   }
@@ -81,7 +81,6 @@ int main(int argc, char* argv[]) {
   Shapez::Solve solve{argv[1]};
   Shapez::Shape shape{argv[2]};
   std::cout << "Input: " << shape.toString() << std::endl;
-
   std::string result = solve.run(shape);
   std::cout << result;
 

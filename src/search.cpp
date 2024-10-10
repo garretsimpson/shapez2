@@ -262,7 +262,6 @@ struct Searcher {
 
     //   Shape shape;
     //   for (auto it : singleLayerShapes) {
-    //     shape = Shape(it.value >> 2 * PART * (LAYER - 1));
     //     std::cout << shape.toString() << std::endl;
     //   }
   }
@@ -305,11 +304,16 @@ struct Searcher {
     }
 
     // pin pusher
-    enqueue(shape.pin(), Build{Op::PinPush, shape, Shape{0}});
+    enqueue(shape.pin(), Build{Op::PinPush, shape, Shape(0)});
 
     // crystal generator
-    enqueue(shape.crystalize(), Build{Op::Crystal, shape, Shape{0}});
+    enqueue(shape.crystalize(), Build{Op::Crystal, shape, Shape(0)});
   }
+
+  const Shape CLAW =
+      Shape("P---P---:P-------:cRCu--Cu:--------").equivalentShapes()[0];
+
+  const Shape DEBUG_SHAPE = Shape("P--P:SSS-:----:----").equivalentShapes()[0];
 
   void enqueue(Shape shape, Build build) {
     if (combinable(shape)) {
@@ -322,13 +326,40 @@ struct Searcher {
       queueSet.insert(shape);
     }
 
-    if (builds.find(shape) == builds.end()) {
-      build.shape1 = build.shape1.equivalentShapes()[0];
-      build.shape2 = build.shape2.equivalentShapes()[0];
-      builds.emplace(shape, build);
+    // if (shape == CLAW) {
+    //   std::cout << "CLAW: " << build.toString() << std::endl;
+    // }
+
+    auto it = builds.find(shape);
+    if (it == builds.end()) {
+      // Not found, add it
+      builds[shape] = build;
+      if (shape == DEBUG_SHAPE) {
+        std::cout << "DEBUG: " << build.toString() << " FOUND" << std::endl;
+      }
     } else {
-      // Duplicate shape found
-      // TODO: Choose which build to store
+      auto oldBuild = it->second;
+      // Duplicate found, check cost
+      auto oldCost = oldBuild.getCost();
+      auto newCost = build.getCost();
+      if (newCost < oldCost) {
+        // Replace when lower cost found
+        builds[shape] = build;
+        if (shape == DEBUG_SHAPE) {
+          std::cout << "DEBUG: " << build.toString() << " LOWER" << std::endl;
+        }
+      } else if (newCost == oldCost) {
+        // Replace if the same cost, but fewer number of layers
+        auto oldLayers = oldBuild.shape1.layers() + oldBuild.shape2.layers();
+        auto newLayers = build.shape1.layers() + build.shape2.layers();
+        if (newLayers < oldLayers) {
+          builds[shape] = build;
+          if (shape == DEBUG_SHAPE) {
+            std::cout << "DEBUG: " << build.toString() << " LAYERS"
+                      << std::endl;
+          }
+        }
+      }
     }
   }
 };
@@ -344,7 +375,9 @@ int main(int argc, char *argv[]) {
     Shapez::ShapeSet set;
     set.halves.insert(set.halves.end(), searcher.halves.begin(),
                       searcher.halves.end());
+    std::cout << "Sorting halves" << std::endl;
     std::sort(set.halves.begin(), set.halves.end());
+
     set.solutions.resize(searcher.builds.size());
     Shapez::Solution solution;
     size_t i = 0;
@@ -352,12 +385,16 @@ int main(int argc, char *argv[]) {
       solution = {it.first, it.second};
       set.solutions[i++] = solution;
     }
+    std::cout << "Sorting shapes" << std::endl;
     std::sort(set.solutions.begin(), set.solutions.end());
+
+    std::cout << "Saving..." << std::endl;
     set.save(argv[1]);
 
     // for (auto it : set.solutions) {
     //   std::cout << it.toString() << std::endl;
     // }
+    std::cout << "DONE" << std::endl;
   }
 
   return 0;
