@@ -435,6 +435,7 @@ DEBUG: ST(P---:SSS-:----:----, P---:----:----:----)
 Ideas
 - To reduce memory, need to replace shape hash set with a build has table.  Not use both.
 - But the changes may be too invasive.
+- Also change the Op enum to use smaller size values.
 
 Notes
 - Implmented countBits() which just calls popcount().
@@ -463,3 +464,37 @@ DEBUG: P--P:SSS-:----:----
 DEBUG: ST(PP--:----:----:----|2, S-SS:----:----:----|3)
 DEBUG: ST(PP--:----:----:----|2, -SSS:----:----:----|3)
 DEBUG: ST(P---:SSS-:----:----|4, ---P:----:----:----|1)
+
+Notes
+- the solver got stuck on this one...
+
+COMPLEX
+P-P-:P---:cS-S:c--- <- ST(P-P-:P---:cS-S:c---, P---:----:----:----) 10
+
+- Seems the solution is recursive.
+- The same shape appears in the parts.
+- Need to modify the search to exclude solutions like this.
+
+Issue
+- The solutions file suddenly got much larger.  Why?
+  - Maybe the removal of making the key shape when saving the build.
+- The search is much slower now, Why?
+  - The only change I think I made was to call saveBuild() sepeartely.
+
+
+# halves: 8148
+# shapes whose halves aren't stable: 2002457
+
+Halves: 8148
+Shapes:                             43440776
+
+- Still too many shapes. Why?
+- This is the list of solutions.  There are too many entries. Why?
+- The code is skipping some check that enque does?
+- Fixed it by putting the save build back into enqueue().
+
+Note
+- The recursive solution is now a PP and SW
+
+P-P-:P---:cS-S:c--- <- PP(c-P-:cScS:c-c-:c---) 15
+  c-P-:cScS:c-c-:c--- <- SW(c---:cS--:c---:c---, --P-:--cS:--c-:----) 15

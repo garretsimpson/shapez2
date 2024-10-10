@@ -295,19 +295,29 @@ struct Searcher {
       halves.push_back(cut);
     }
 
+    Shape newShape;
+    Build build;
+
     // stack
     Shape top;
     for (Shape piece : singleLayerShapes) {
+      newShape = shape.stack(piece);
       // TODO: Fix the top piece during post processing
       top = Shape(piece.value >> 2 * PART * (LAYER - 1));
-      enqueue(shape.stack(piece), Build{Op::Stack, shape, top});
+      build = Build{Op::Stack, shape, top};
+      enqueue(newShape, build);
+      // TODO: Fix the top piece during post processing
     }
 
     // pin pusher
-    enqueue(shape.pin(), Build{Op::PinPush, shape, Shape(0)});
+    newShape = shape.pin();
+    build = Build{Op::PinPush, shape, Shape(0)};
+    enqueue(newShape, build);
 
     // crystal generator
-    enqueue(shape.crystalize(), Build{Op::Crystal, shape, Shape(0)});
+    newShape = shape.crystalize();
+    build = Build{Op::Crystal, shape, Shape(0)};
+    enqueue(newShape, build);
   }
 
   const Shape CLAW =
@@ -329,6 +339,10 @@ struct Searcher {
     // if (shape == CLAW) {
     //   std::cout << "CLAW: " << build.toString() << std::endl;
     // }
+
+    // if recursive build, return
+    // shape1 is the old shape, and is already a key shape.
+    if (shape == build.shape1) return;
 
     auto it = builds.find(shape);
     if (it == builds.end()) {
