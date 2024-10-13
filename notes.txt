@@ -498,3 +498,14 @@ Note
 
 P-P-:P---:cS-S:c--- <- PP(c-P-:cScS:c-c-:c---) 15
   c-P-:cScS:c-c-:c--- <- SW(c---:cS--:c---:c---, --P-:--cS:--c-:----) 15
+
+Notes
+- Current file size
+10/10/2024  12:03 AM        32,071,912 s4
+- Each solution is 4, 32-bit values (Shape, Op, Shape, Shape)
+
+Idea
+- Make a solution finder that reads the known shape list first, then performs operations over all of them.
+- Should be smaller (memory) and faster than finding solutions during shape finding.
+- Revert all the changes to the shape finder.
+

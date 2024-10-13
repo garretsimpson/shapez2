@@ -320,11 +320,6 @@ struct Searcher {
     enqueue(newShape, build);
   }
 
-  const Shape CLAW =
-      Shape("P---P---:P-------:cRCu--Cu:--------").equivalentShapes()[0];
-
-  const Shape DEBUG_SHAPE = Shape("P--P:SSS-:----:----").equivalentShapes()[0];
-
   void enqueue(Shape shape, Build build) {
     if (combinable(shape)) {
       return;
@@ -335,6 +330,14 @@ struct Searcher {
       queue.push_back(shape);
       queueSet.insert(shape);
     }
+
+    return;
+
+    const Shape CLAW =
+        Shape("P---P---:P-------:cRCu--Cu:--------").equivalentShapes()[0];
+
+    const Shape DEBUG_SHAPE =
+        Shape("P--P:SSS-:----:----").equivalentShapes()[0];
 
     // if (shape == CLAW) {
     //   std::cout << "CLAW: " << build.toString() << std::endl;
