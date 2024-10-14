@@ -392,7 +392,7 @@ int main(int argc, char *argv[]) {
     Shapez::ShapeSet set;
     set.halves.insert(set.halves.end(), searcher.halves.begin(),
                       searcher.halves.end());
-    std::cout << "Sorting halves" << std::endl;
+    std::cout << "Sorting halves..." << std::endl;
     std::sort(set.halves.begin(), set.halves.end());
 
     set.solutions.resize(searcher.builds.size());
@@ -402,7 +402,7 @@ int main(int argc, char *argv[]) {
       solution = {it.first, it.second};
       set.solutions[i++] = solution;
     }
-    std::cout << "Sorting shapes" << std::endl;
+    std::cout << "Sorting shapes..." << std::endl;
     std::sort(set.solutions.begin(), set.solutions.end());
 
     std::cout << "Saving..." << std::endl;

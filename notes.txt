@@ -509,3 +509,102 @@ Idea
 - Should be smaller (memory) and faster than finding solutions during shape finding.
 - Revert all the changes to the shape finder.
 
+Quarter shapes with a gap somewhere under a top crystal... (48)
+  50  S-c--
+  56  -Sc--
+ 194  S--c-
+ 200  -S-c-
+ 201  PS-c-
+ 202  SS-c-
+ 224  --Sc-
+ 225  P-Sc-
+ 226  S-Sc-
+ 232  -SSc-
+ 242  S-cc-
+ 248  -Scc-
+ 770  S---c
+ 776  -S--c
+ 777  PS--c
+ 778  SS--c
+ 800  --S-c
+ 801  P-S-c
+ 802  S-S-c
+ 805  PPS-c
+ 808  -SS-c
+ 809  PSS-c
+ 810  SSS-c
+ 811  cSS-c
+ 896  ---Sc
+ 897  P--Sc
+ 898  S--Sc
+ 901  PP-Sc
+ 904  -S-Sc
+ 905  PS-Sc
+ 906  SS-Sc
+ 907  cS-Sc
+ 928  --SSc
+ 929  P-SSc
+ 930  S-SSc
+ 936  -SSSc
+ 946  S-cSc
+ 952  -ScSc
+ 962  S--cc
+ 968  -S-cc
+ 969  PS-cc
+ 970  SS-cc
+ 992  --Scc
+ 993  P-Scc
+ 994  S-Scc
+1000  -SScc
+1010  S-ccc
+1016  -Sccc
+
+Just the drops... (24)
+  50  S-c--
+ 194  S--c-
+ 200  -S-c-
+ 201  PS-c-
+ 202  SS-c-
+ 242  S-cc-
+ 770  S---c
+ 776  -S--c
+ 777  PS--c
+ 778  SS--c
+ 800  --S-c
+ 801  P-S-c
+ 802  S-S-c
+ 805  PPS-c
+ 808  -SS-c
+ 809  PSS-c
+ 810  SSS-c
+ 811  cSS-c
+ 946  S-cSc
+ 962  S--cc
+ 968  -S-cc
+ 969  PS-cc
+ 970  SS-cc
+1010  S-ccc
+
+Without pin pushed shapes and stuff on top... (13)
+  50  S-c--
+ 194  S--c-
+ 200  -S-c-
+ 202  SS-c-
+ 770  S---c
+ 776  -S--c
+ 778  SS--c
+ 800  --S-c
+ 801  P-S-c
+ 802  S-S-c
+ 808  -SS-c
+ 810  SSS-c
+ 811  cSS-c
+
+Notes
+- Needed to revert the dump file load method since the 5-layer shapes are in the old format.
+
+Idea
+- Shape solver (again)
+- Is there a way to use the known shape list to find all soltions?
+- Will it be smaller / faster that finding solutions during shape searching?
+

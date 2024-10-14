@@ -525,6 +525,7 @@ struct Solution {
 
 struct ShapeSet {
   std::vector<Shape> halves;
+  std::vector<Shape> shapes;
   std::vector<Solution> solutions;
 
   void save(const std::string &filename) const {
@@ -543,6 +544,23 @@ struct ShapeSet {
   }
 
   static ShapeSet load(const std::string &filename) {
+    using namespace std;
+    ShapeSet ret;
+    ifstream file{filename, ios::in | ios::binary};
+    uint32_t size;
+
+    file.read(reinterpret_cast<char *>(&size), sizeof(size));
+    ret.halves.resize(size);
+    file.read(reinterpret_cast<char *>(ret.halves.data()),
+              size * sizeof(Shape));
+    file.read(reinterpret_cast<char *>(&size), sizeof(size));
+    ret.shapes.resize(size);
+    file.read(reinterpret_cast<char *>(ret.shapes.data()),
+              size * sizeof(Shape));
+    return ret;
+  }
+
+  static ShapeSet loadNew(const std::string &filename) {
     using namespace std;
     ShapeSet ret;
     ifstream file{filename, ios::in | ios::binary};
