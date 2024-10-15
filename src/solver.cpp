@@ -1,8 +1,10 @@
 #include <algorithm>
+#include <format>
 #include <iostream>
 
 #include "3ps/ska/bytell_hash_map.hpp"
 #include "shapez.hpp"
+#include "spu.hpp"
 
 namespace Shapez {
 
@@ -61,21 +63,16 @@ struct Solver {
       std::cout << "Found: " << found << std::endl;
   }
 
-  void displayShapes(std::vector<Shape> shapes, size_t maxSize) {
-    size_t size = shapes.size();
-    size = std::min(size, maxSize);
+  void displayShapes(std::vector<Shape> shapes, size_t maxSize = 10) {
+    size_t size = std::min(shapes.size(), maxSize);
     for (auto i = 0; i < size; ++i) {
       std::cout << shapes[i].toString() << std::endl;
     }
   }
 
-  Solution solve(Shape shape) { return Solution(); }
-
-  Shape build(Solution solution) { return Shape(); }
+  Spu::Solution solve(Shape shape) { return Spu::Solution(); }
 
   void run() {
-    const size_t MAX_SIZE = 10;
-
     std::vector<Shape> todo;
     std::vector<Shape> knowns;
     std::vector<Shape> unknowns;
@@ -85,11 +82,12 @@ struct Solver {
     std::sort(todo.begin(), todo.end());
     std::cout << std::format("todo {}", todo.size()) << std::endl;
 
-    Solution solution;
+    Spu::Solution solution;
     Shape newShape;
     for (Shape goalShape : todo) {
       solution = solve(goalShape);
-      newShape = build(solution);
+      solution.build();
+      newShape = solution.getShape();
       if (newShape == goalShape) {
         knowns.push_back(goalShape);
       } else {
@@ -100,9 +98,30 @@ struct Solver {
     std::cout << std::format("knowns {}, unknowns: {}", knowns.size(),
                              unknowns.size())
               << std::endl;
-    displayShapes(unknowns, MAX_SIZE);
+    displayShapes(unknowns);
   }
 };
+
+void testSpu() {
+  Spu spu = Spu();
+  Spu::Solution solution;
+
+  Shape s1, s2;
+  s1.set(0, 0, Type::Shape);
+  s2.set(0, 1, Type::Shape);
+  solution.addShape(s1);
+  solution.addShape(s2);
+  solution.addOp(Spu::Op::Input);
+  solution.addOp(Spu::Op::Input);
+  solution.addOp(Spu::Op::Stack);
+  solution.addOp(Spu::Op::Output);
+
+  std::cout << solution.toString() << std::endl;
+
+  solution.build();
+
+  std::cout << solution.toString() << std::endl;
+}
 
 }  // namespace Shapez
 
@@ -115,7 +134,8 @@ int main(int argc, char* argv[]) {
 
   Shapez::Solver solver(filename);
   // solver.verifyShapes();
-  solver.run();
+  // solver.run();
+  Shapez::testSpu();
 
   std::cout << "DONE" << std::endl;
   return 0;

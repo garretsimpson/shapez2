@@ -466,7 +466,7 @@ struct Shape {
   constexpr size_t bitCount() const { return std::popcount(value); }
 };
 
-enum class Op {
+enum class Op : char {
   Rotate,
   Stack,
   Swap,
@@ -476,8 +476,6 @@ enum class Op {
 
 inline std::string opCode(Op op) {
   switch (op) {
-    case Op::Rotate:
-      return "RR";
     case Op::Stack:
       return "ST";
     case Op::Swap:
