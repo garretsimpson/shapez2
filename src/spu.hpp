@@ -117,11 +117,11 @@ struct Spu {
             std::cerr << "ERROR: Stack requires two shapes" << std::endl;
             return result;
           }
-          top = stack.back();
+          top = Shape(stack.back());
           stack.pop_back();
-          bottom = stack.back();
+          bottom = Shape(stack.back());
           stack.pop_back();
-          shape = Shape(top.value | bottom.value);
+          shape = bottom.stackAny(top);
           stack.push_back(shape);
           std::cout << std::format("DEBUG Stack {} {} -> {}", top.toString(),
                                    bottom.toString(), shape.toString())

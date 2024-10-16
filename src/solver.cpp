@@ -170,9 +170,8 @@ void test() {
   for (Shape shape : output) {
     std::cout << shape.toString() << std::endl;
   }
-
-  std::cout << "Solution (after):" << std::endl;
-  std::cout << solution.toString() << std::endl;
+  bool pass = (output[0] == goal);
+  std::cout << std::format("{}", pass ? "PASS" : "FAIL") << std::endl;
 }
 
 }  // namespace Shapez

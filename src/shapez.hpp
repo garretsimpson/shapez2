@@ -122,7 +122,6 @@ struct Shape {
         }
       }
     }
-    // repr += '|' + std::to_string(bitCount());
     return repr;
   }
 
@@ -338,6 +337,26 @@ struct Shape {
           ret = ret.stack(Shape(connected));
         }
       }
+    }
+    return ret;
+  }
+
+  // stack any shape on top
+  constexpr Shape stackAny(Shape top) {
+    Shape ret{value};
+    // break all crystal on top shape
+    T tv = top.value;
+    tv &= ~top.find<Type::Crystal>();
+
+    // for each of the layers of the top shape, insert the layer if it fits and
+    // then collapse
+    for (T v = tv; v != 0; v >>= 2 * PART) {
+      // take bottom layer of top shape and move it to the top layer
+      T top = (v & repeat<T>(3, 2, 2 * PART)) << (2 * PART * (LAYER - 1));
+      T empty = ret.find<Type::Empty>();
+      if (top & ~empty) break;
+      ret = Shape(ret.value | top);
+      ret = ret.collapse();
     }
     return ret;
   }
