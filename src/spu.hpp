@@ -48,93 +48,96 @@ struct Spu {
   struct Solution {
     std::vector<Op> ops;
     std::vector<Shape> input;
-    std::vector<Shape> output;
-    std::vector<Shape> stack;
 
     void clear() {
       ops.clear();
       input.clear();
-      output.clear();
     }
 
-    void addOp(Op op) { ops.push_back(op); };
+    void addOp(Op op) {
+      std::cout << toChar(op) << std::endl;
+      ops.push_back(op);
+    };
 
-    void addShape(Shape shape) { input.push_back(shape); };
+    void addShape(Shape shape) {
+      addOp(Op::Input);
+      input.push_back(shape);
+    };
 
     std::string toString() {
       std::string result = "";
       std::string code = "";
       for (Op op : ops) {
-        code += toChar(op);
+        code = toChar(op) + code;
       }
       result += std::format("code: {}\n", code);
       result += "input:\n";
       for (Shape shape : input) {
         result += shape.toString() + "\n";
       }
-      result += "output:\n";
-      for (Shape shape : output) {
-        result += shape.toString() + "\n";
-      }
       return result;
     }
-
-    void build() {
-      Shape shape, top, bottom;
-      for (Op op : ops) {
-        switch (op) {
-          case Op::Input:
-            shape = input.back();
-            input.pop_back();
-            stack.push_back(shape);
-            std::cout << std::format("DEBUG Input {}", shape.toString())
-                      << std::endl;
-            break;
-          case Op::Output:
-            shape = stack.back();
-            stack.pop_back();
-            output.push_back(shape);
-            std::cout << std::format("DEBUG Output {}", shape.toString())
-                      << std::endl;
-            break;
-          case Op::Trash:
-            stack.pop_back();
-            break;
-          case Op::Rotate1:
-            break;
-          case Op::Rotate2:
-            break;
-          case Op::Rotate3:
-            break;
-          case Op::Cut:
-            break;
-          case Op::Stack:
-            if (stack.size() < 2) {
-              std::cerr << "ERROR: Stack requires two shapes" << std::endl;
-              return;
-            }
-            top = stack.back();
-            stack.pop_back();
-            bottom = stack.back();
-            stack.pop_back();
-            shape = Shape(top.value + bottom.value);
-            stack.push_back(shape);
-            std::cout << std::format("DEBUG Stack {} {} -> {}", top.toString(),
-                                     bottom.toString(), shape.toString())
-                      << std::endl;
-            break;
-          case Op::Swap:
-            break;
-          case Op::PinPush:
-            break;
-          case Op::Crystal:
-            break;
-        }
-      }
-    }
-
-    Shape getShape() { return stack.back(); }
   };
+
+  std::vector<Shape> build(Solution solution) {
+    std::vector<Shape> result;
+    std::vector<Shape> stack;
+    Shape shape, top, bottom;
+
+    std::vector<Op> ops = solution.ops;
+    while (!ops.empty()) {
+      switch (ops.back()) {
+        case Op::Input:
+          shape = solution.input.back();
+          solution.input.pop_back();
+          stack.push_back(shape);
+          std::cout << std::format("DEBUG Input {}", shape.toString())
+                    << std::endl;
+          break;
+        case Op::Output:
+          shape = stack.back();
+          stack.pop_back();
+          result.push_back(shape);
+          std::cout << std::format("DEBUG Output {}", shape.toString())
+                    << std::endl;
+          break;
+        case Op::Trash:
+          stack.pop_back();
+          break;
+        case Op::Rotate1:
+          break;
+        case Op::Rotate2:
+          break;
+        case Op::Rotate3:
+          break;
+        case Op::Cut:
+          break;
+        case Op::Stack:
+          if (stack.size() < 2) {
+            std::cerr << "ERROR: Stack requires two shapes" << std::endl;
+            return result;
+          }
+          top = stack.back();
+          stack.pop_back();
+          bottom = stack.back();
+          stack.pop_back();
+          shape = Shape(top.value | bottom.value);
+          stack.push_back(shape);
+          std::cout << std::format("DEBUG Stack {} {} -> {}", top.toString(),
+                                   bottom.toString(), shape.toString())
+                    << std::endl;
+          break;
+        case Op::Swap:
+          break;
+        case Op::PinPush:
+          break;
+        case Op::Crystal:
+          break;
+      }
+      ops.pop_back();
+    }
+    return result;
+  }
 };
 
 }  // namespace Shapez

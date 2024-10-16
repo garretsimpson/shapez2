@@ -86,8 +86,8 @@ struct Solver {
     Shape newShape;
     for (Shape goalShape : todo) {
       solution = solve(goalShape);
-      solution.build();
-      newShape = solution.getShape();
+      // solution.build();
+      // newShape = solution.getShape();
       if (newShape == goalShape) {
         knowns.push_back(goalShape);
       } else {
@@ -118,8 +118,60 @@ void testSpu() {
 
   std::cout << solution.toString() << std::endl;
 
-  solution.build();
+  spu.build(solution);
 
+  std::cout << solution.toString() << std::endl;
+}
+
+void test() {
+  const std::string TEST_SHAPE_3 = "PSSS:PPSS:PPPS:----";
+  Shape goal = Shape(TEST_SHAPE_3);
+  std::cout << format("Goal: {}", goal.toString()) << std::endl;
+
+  // split into 3 layers
+  // Shape layer;
+  // for (int i = goal.layers() - 1; i >= 0; --i) {
+  //   layer = goal.getLayer(i);
+  //   std::cout << format("Layer {}: {}", i, layer.toString()) << std::endl;
+  // }
+
+  // working stack
+  std::vector<Shape> stack = {goal};
+
+  Spu::Solution solution;
+  solution.addOp(Spu::Op::Output);
+  while (!stack.empty()) {
+    Shape shape = stack.back();
+    stack.pop_back();
+    std::cout << format("Shape: {}", shape.toString()) << std::endl;
+    size_t layers = shape.layers();
+    if (layers == 1) {
+      // if shape is one layer, push it
+      solution.addShape(shape);
+      continue;
+    }
+    // extract top layer
+    Shape top = shape.getLayer(layers - 1);
+    solution.addOp(Spu::Op::Stack);
+    solution.addShape(top);
+    // create new shape and put back on stack
+    Shape::T mask = repeat<Shape::T>(3, 2, Shape::PART * (layers - 1));
+    shape = shape & mask;
+    stack.push_back(shape);
+  }
+
+  std::cout << "Solution (before):" << std::endl;
+  std::cout << solution.toString() << std::endl;
+
+  Spu spu;
+  std::vector<Shape> output = spu.build(solution);
+
+  std::cout << "Output:" << std::endl;
+  for (Shape shape : output) {
+    std::cout << shape.toString() << std::endl;
+  }
+
+  std::cout << "Solution (after):" << std::endl;
   std::cout << solution.toString() << std::endl;
 }
 
@@ -135,7 +187,7 @@ int main(int argc, char* argv[]) {
   Shapez::Solver solver(filename);
   // solver.verifyShapes();
   // solver.run();
-  Shapez::testSpu();
+  Shapez::test();
 
   std::cout << "DONE" << std::endl;
   return 0;

@@ -462,6 +462,13 @@ struct Shape {
     }
   }
 
+  // Return one layer
+  Shape getLayer(size_t layer) {
+    T ret = value >> (layer * PART * 2);
+    constexpr T mask = repeat<T>(3, 2, PART);
+    return Shape(ret & mask);
+  }
+
   // Count the bits set
   constexpr size_t bitCount() const { return std::popcount(value); }
 };

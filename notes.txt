@@ -608,3 +608,7 @@ Idea
 - Is there a way to use the known shape list to find all soltions?
 - Will it be smaller / faster that finding solutions during shape searching?
 
+Idea
+- Use a stack (todo list) for the solver.
+- For each operation (unstack, unpin, output) add the corresponding operation to the solution (stack, pin, input).
+
