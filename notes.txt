@@ -612,3 +612,26 @@ Idea
 - Use a stack (todo list) for the solver.
 - For each operation (unstack, unpin, output) add the corresponding operation to the solution (stack, pin, input).
 
+Notes
+- Implemented a simple SPU and stack operation
+- The solver outputs single layer shapes or unstacks the top and tries again.
+
+knowns 1576, unknowns: 6572
+P---:c---:----:----
+S---:c---:----:----
+c---:c---:----:----
+
+Notes
+- Make a quarter crystal on solid
+  - Make the base, stack a mold on top, make crystal, cut away mold
+  - To reduce number of rotates, make it in adjacent quad, and cut > rotate > cut
+- Make a quarter crystal on pin
+  - Make mold, make crystal, cut away mold, pin push
+  - Or, pin push then cut away mold.
+
+Idea
+- Maybe the build step should be smarter.
+- Like it could do ROS and CROS without explicit instructions.
+- Maybe any gapless shape.
+- Would need to have the build step check for this and do the work.
+

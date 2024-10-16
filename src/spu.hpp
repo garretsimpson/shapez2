@@ -55,7 +55,7 @@ struct Spu {
     }
 
     void addOp(Op op) {
-      std::cout << toChar(op) << std::endl;
+      // std::cout << toChar(op) << std::endl;
       ops.push_back(op);
     };
 
@@ -91,15 +91,11 @@ struct Spu {
           shape = solution.input.back();
           solution.input.pop_back();
           stack.push_back(shape);
-          std::cout << std::format("DEBUG Input {}", shape.toString())
-                    << std::endl;
           break;
         case Op::Output:
           shape = stack.back();
           stack.pop_back();
           result.push_back(shape);
-          std::cout << std::format("DEBUG Output {}", shape.toString())
-                    << std::endl;
           break;
         case Op::Trash:
           stack.pop_back();
@@ -123,9 +119,6 @@ struct Spu {
           stack.pop_back();
           shape = bottom.stackAny(top);
           stack.push_back(shape);
-          std::cout << std::format("DEBUG Stack {} {} -> {}", top.toString(),
-                                   bottom.toString(), shape.toString())
-                    << std::endl;
           break;
         case Op::Swap:
           break;
