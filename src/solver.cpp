@@ -70,7 +70,34 @@ struct Solver {
     }
   }
 
-  Spu::Solution solve(Shape goal) {
+  bool oneLayerPin(Shape shape) {
+    T mask = repeat<T>(T(Type::Pin), 2, PART);
+    return (shape.value & mask) == shape.value;
+  }
+
+  bool oneLayerSolid(Shape shape) {
+    T mask = repeat<T>(T(Type::Shape), 2, PART);
+    return (shape.value & mask) == shape.value;
+  }
+
+  bool oneCrystal(Shape shape) {
+    Shape testShape;
+    testShape.set(0, 0, Type::Crystal);
+    return shape == testShape;
+  }
+
+  bool topCrystal(Shape shape) {
+    // Shape::T mask = 0;
+    // // extract top layer
+    // Shape top = shape.getLayer(layers - 1);
+    // T topCrystal = top.find<Type::Crystal>();
+    // // std::cout << std::format("topCrystal: {}", topCrystal) << std::endl;
+    return false;
+  }
+
+  // This solver only handles half-shapes (for now).
+  // The West half is empty.
+  bool solve(Shape goal) {
     std::cout << format("Goal: {}", goal.toString());
 
     // working stack
@@ -83,33 +110,43 @@ struct Solver {
       stack.pop_back();
       // std::cout << format("Shape: {}", shape.toString()) << std::endl;
       size_t layers = shape.layers();
-      if (shape.value == 0 || layers == 1) {
-        // if shape is one layer, push it
+      if (shape.value == 0) {
+        // handle the null shape
         solution.addShape(shape);
         continue;
       }
-      Shape::T mask = 0;
-      // extract top layer
-      Shape top = shape.getLayer(layers - 1);
-      T topCrystal = top.find<Type::Crystal>();
-      // std::cout << std::format("topCrystal: {}", topCrystal) << std::endl;
-
-      if (topCrystal == 0) {
-        // no crystal on top
-        solution.addOp(Spu::Op::Stack);
-        solution.addShape(top);
-        mask = top.value << (2 * PART * (layers - 1));
-        shape = shape & ~mask;
-        stack.push_back(shape);
-      } else {
-        solution.addShape(Shape(0));
+      if (oneLayerSolid(shape) | oneLayerPin(shape)) {
+        solution.addShape(shape);
+        continue;
       }
+      if (oneCrystal(shape)) {
+        // make one crystal: import a mold, make crystal, then cut>rotate>cut
+        solution.addOp(Spu::Op::DestroyWest);
+        solution.addOp(Spu::Op::Rotate1);
+        solution.addOp(Spu::Op::DestroyWest);
+        solution.addOp(Spu::Op::Crystal);
+        Shape mold(repeat<T>(T(Type::Shape), 2, PART));
+        mold.set(0, 1, Type::Empty);
+        solution.addShape(mold);
+        continue;
+      }
+
+      // if (topCrystal == 0) {
+      //   // no crystal on top
+      //   solution.addOp(Spu::Op::Stack);
+      //   solution.addShape(top);
+      //   mask = top.value << (2 * PART * (layers - 1));
+      //   shape = shape & ~mask;
+      //   stack.push_back(shape);
+      // } else {
+      solution.addShape(Shape(0));
+      // }
       // create new shape and put back on stack
       // Shape::T mask = repeat<Shape::T>(3, 2, Shape::PART * (layers - 1));
     }
 
     // std::cout << "Solution (before):" << std::endl;
-    // std::cout << solution.toString() << std::endl;
+    // std::cout << std::endl << solution.toString() << std::endl;
 
     Spu spu;
     std::vector<Shape> output = spu.build(solution);
@@ -120,7 +157,7 @@ struct Solver {
       std::cout << std::format(" FAIL {}", output[0].toString());
     std::cout << std::endl;
 
-    return solution;
+    return pass;
   }
 
   void run() {
@@ -133,11 +170,8 @@ struct Solver {
     std::sort(todo.begin(), todo.end());
     std::cout << std::format("todo {}", todo.size()) << std::endl;
 
-    Spu spu;
     for (Shape goalShape : todo) {
-      Spu::Solution solution = solve(goalShape);
-      Shape newShape = spu.build(solution)[0];
-      if (newShape == goalShape) {
+      if (solve(goalShape)) {
         knowns.push_back(goalShape);
       } else {
         unknowns.push_back(goalShape);
@@ -172,6 +206,14 @@ void testSpu() {
   std::cout << solution.toString() << std::endl;
 }
 
+void test() {
+  using T = Shape::T;
+  T value = repeat<T>(T(Type::Shape), 2, Shape::PART);
+  Shape shape(value);
+  shape = shape.cut();
+  std::cout << shape.toString() << std::endl;
+}
+
 }  // namespace Shapez
 
 int main(int argc, char* argv[]) {
@@ -182,7 +224,7 @@ int main(int argc, char* argv[]) {
   char* filename = argv[1];
 
   Shapez::Solver solver(filename);
-  // solver.verifyShapes();
+  // Shapez::test();
   solver.run();
 
   std::cout << "DONE" << std::endl;

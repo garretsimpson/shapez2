@@ -11,6 +11,7 @@ struct Spu {
     Rotate2,
     Rotate3,
     Cut,
+    DestroyWest,
     Stack,
     Swap,
     Crystal,
@@ -33,6 +34,8 @@ struct Spu {
         return 'L';
       case Op::Cut:
         return 'C';
+      case Op::DestroyWest:
+        return 'D';
       case Op::Stack:
         return 'S';
       case Op::Swap:
@@ -82,52 +85,86 @@ struct Spu {
   std::vector<Shape> build(Solution solution) {
     std::vector<Shape> result;
     std::vector<Shape> stack;
-    Shape shape, top, bottom;
 
     std::vector<Op> ops = solution.ops;
     while (!ops.empty()) {
-      switch (ops.back()) {
-        case Op::Input:
-          shape = solution.input.back();
-          solution.input.pop_back();
-          stack.push_back(shape);
-          break;
-        case Op::Output:
-          shape = stack.back();
-          stack.pop_back();
-          result.push_back(shape);
-          break;
-        case Op::Trash:
-          stack.pop_back();
-          break;
+      Op op = ops.back();
+      ops.pop_back();
+      // std::cout << std::format("Op: {}", toChar(op)) << std::endl;
+
+      Shape shape;
+      std::pair<Shape, Shape> shapes;
+      if (op == Op::Input) {
+        if (solution.input.size() < 1) {
+          std::cerr << "ERROR: Input requires at least one shape" << std::endl;
+          return result;
+        }
+        shape = solution.input.back();
+        solution.input.pop_back();
+        stack.push_back(shape);
+        // std::cout << std::format("Shape: {}", shape.toString()) << std::endl;
+        continue;
+      }
+      if (stack.size() < 1) {
+        std::cerr << "ERROR: Operation requires at least one shape"
+                  << std::endl;
+        return result;
+      }
+      shape = stack.back();
+      stack.pop_back();
+      if (op == Op::Trash) {
+        // do nothing
+        continue;
+      }
+      if (op == Op::Output) {
+        result.push_back(shape);
+        continue;
+      }
+      Shape top, bottom;
+      switch (op) {
         case Op::Rotate1:
+          shape = shape.rotate(1);
           break;
         case Op::Rotate2:
+          shape = shape.rotate(2);
           break;
         case Op::Rotate3:
+          shape = shape.rotate(3);
           break;
         case Op::Cut:
+          shapes = shape.cutBoth();
+          stack.push_back(shapes.first);
+          shape = shapes.second;
+          break;
+        case Op::DestroyWest:
+          shape = shape.cut();
           break;
         case Op::Stack:
-          if (stack.size() < 2) {
+          if (stack.size() < 1) {
             std::cerr << "ERROR: Stack requires two shapes" << std::endl;
             return result;
           }
-          top = Shape(stack.back());
-          stack.pop_back();
+          top = shape;
           bottom = Shape(stack.back());
           stack.pop_back();
           shape = bottom.stackAny(top);
-          stack.push_back(shape);
           break;
         case Op::Swap:
+          if (stack.size() < 1) {
+            std::cerr << "ERROR: Swap requires two shapes" << std::endl;
+            return result;
+          }
+          std::cerr << "ERROR: Swap not implemented" << std::endl;
           break;
         case Op::PinPush:
+          shape = shape.pin();
           break;
         case Op::Crystal:
+          shape = shape.crystalize();
           break;
       }
-      ops.pop_back();
+      // std::cout << std::format("Shape: {}", shape.toString()) << std::endl;
+      stack.push_back(shape);
     }
     return result;
   }

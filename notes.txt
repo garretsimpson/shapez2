@@ -635,3 +635,21 @@ Idea
 - Maybe any gapless shape.
 - Would need to have the build step check for this and do the work.
 
+Idea
+- There are only 4(?) operations:
+  - stack
+  - swap
+  - pin push
+  - crystal
+- There is also cut and rotate.
+- Inputs
+  - input 1-layer solid shape
+  - input 1-layer pin (or 1 pin)
+- In theory, the solver just needs to determine which op is needed and then undo it.
+
+Idea
+- A linear step-by-step solver, where each step is independent might not be possible.
+- Look-ahead, look-behind, branching, etc. may be needed.
+- solvers probably have sub-solvers (nested).
+- Probably need to pass information along with shapes to future solving steps.
+- And probably need to solve some shapes in parallel.

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <stdexcept>
 #include <string>
@@ -173,7 +174,7 @@ struct Shape {
     return l;
   }
 
-  // rotate the shape N times
+  // rotate the shape N times - counter-clockwise (to the left)
   constexpr Shape rotate(size_t N = 1) const {
     T mask = repeat<T>(repeat<T>(3, 2, N), PART * 2, LAYER);
     return Shape(((value & mask) << (2 * (PART - N))) |
@@ -408,13 +409,24 @@ struct Shape {
     return Shape(ret);
   }
 
-  // Cut the shape. Returns the west half
-  constexpr Shape cut() const {
-    // mask of the west half
+  // Cut the shape. Returns both halves
+  constexpr std::pair<Shape, Shape> cutBoth() const {
+    // mask of the East half
     constexpr T mask = repeat<T>(repeat<T>(3, 2, PART / 2), 2 * PART, LAYER);
-    // break all the crystals in the east half, and connected ones
+    Shape east = breakCrystals<~mask>();
+    Shape west = breakCrystals<mask>();
+    east.value &= mask;
+    west.value &= ~mask;
+    return std::make_pair(east.collapse(), west.collapse());
+  }
+
+  // Cut the shape. Returns the East half
+  constexpr Shape cut() const {
+    // mask of the East half
+    constexpr T mask = repeat<T>(repeat<T>(3, 2, PART / 2), 2 * PART, LAYER);
+    // break all the crystals in the West half, and connected ones
     Shape ret = breakCrystals<~mask>();
-    // remove everything in the east half
+    // remove everything in the West half
     ret.value &= mask;
     // apply gravity
     return ret.collapse();
