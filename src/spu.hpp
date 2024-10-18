@@ -27,11 +27,11 @@ struct Spu {
       case Op::Trash:
         return 'T';
       case Op::Rotate1:
-        return 'R';
+        return 'L';
       case Op::Rotate2:
         return 'U';
       case Op::Rotate3:
-        return 'L';
+        return 'R';
       case Op::Cut:
         return 'C';
       case Op::DestroyWest:
@@ -114,13 +114,15 @@ struct Spu {
       stack.pop_back();
       if (op == Op::Trash) {
         // do nothing
+        std::cout << std::format("Trash: {}", shape.toString()) << std::endl;
         continue;
       }
       if (op == Op::Output) {
         result.push_back(shape);
         continue;
       }
-      Shape top, bottom;
+      Shape top, bottom, other;
+      std::pair<Shape, Shape> pair;
       switch (op) {
         case Op::Rotate1:
           shape = shape.rotate(1);
@@ -132,12 +134,12 @@ struct Spu {
           shape = shape.rotate(3);
           break;
         case Op::Cut:
-          shapes = shape.cutBoth();
+          shapes = shape.cut();
           stack.push_back(shapes.first);
           shape = shapes.second;
           break;
         case Op::DestroyWest:
-          shape = shape.cut();
+          shape = shape.destroyHalf();
           break;
         case Op::Stack:
           if (stack.size() < 1) {
@@ -145,16 +147,20 @@ struct Spu {
             return result;
           }
           top = shape;
-          bottom = Shape(stack.back());
+          bottom = stack.back();
           stack.pop_back();
-          shape = bottom.stackAny(top);
+          shape = bottom.stack(top);
           break;
         case Op::Swap:
           if (stack.size() < 1) {
             std::cerr << "ERROR: Swap requires two shapes" << std::endl;
             return result;
           }
-          std::cerr << "ERROR: Swap not implemented" << std::endl;
+          other = stack.back();
+          stack.pop_back();
+          pair = shape.swap(other);
+          stack.push_back(pair.second);
+          shape = pair.first;
           break;
         case Op::PinPush:
           shape = shape.pin();

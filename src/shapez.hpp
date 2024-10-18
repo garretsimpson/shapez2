@@ -274,7 +274,7 @@ struct Shape {
   // A general shape can be decomposed into multiple connected shapes.
   // Stacking the whole shape on another shape is equivalent to sequentially
   // stacking each connected pieces from bottom to top.
-  constexpr Shape stack(Shape oneLayer) const {
+  constexpr Shape stackOne(Shape oneLayer) const {
     T empty = find<Type::Empty>();
     T v = oneLayer.value;
     // If there is no room at the very top, the shape will exceed layer
@@ -317,7 +317,7 @@ struct Shape {
         Type type = Shape(v).get(layer, part);
         if (type == Type::Pin) {
           // Pin is not connected to any part
-          ret = ret.stack(Shape(extract(layer, part)));
+          ret = ret.stackOne(Shape(extract(layer, part)));
         } else if (type == Type::Shape) {
           // Find connected parts
           T connected = extract(layer, part);
@@ -335,7 +335,7 @@ struct Shape {
             connected |= extract(layer, part);
           }
           // Stack the connected parts
-          ret = ret.stack(Shape(connected));
+          ret = ret.stackOne(Shape(connected));
         }
       }
     }
@@ -343,7 +343,7 @@ struct Shape {
   }
 
   // stack any shape on top
-  constexpr Shape stackAny(Shape top) {
+  constexpr Shape stack(Shape top) {
     Shape ret{value};
     // break all crystal on top shape
     T tv = top.value;
@@ -410,7 +410,7 @@ struct Shape {
   }
 
   // Cut the shape. Returns both halves
-  constexpr std::pair<Shape, Shape> cutBoth() const {
+  constexpr std::pair<Shape, Shape> cut() const {
     // mask of the East half
     constexpr T mask = repeat<T>(repeat<T>(3, 2, PART / 2), 2 * PART, LAYER);
     Shape east = breakCrystals<~mask>();
@@ -421,7 +421,7 @@ struct Shape {
   }
 
   // Cut the shape. Returns the East half
-  constexpr Shape cut() const {
+  constexpr Shape destroyHalf() const {
     // mask of the East half
     constexpr T mask = repeat<T>(repeat<T>(3, 2, PART / 2), 2 * PART, LAYER);
     // break all the crystals in the West half, and connected ones
@@ -430,6 +430,13 @@ struct Shape {
     ret.value &= mask;
     // apply gravity
     return ret.collapse();
+  }
+
+  constexpr std::pair<Shape, Shape> swap(Shape shape) const {
+    auto pair1 = cut();
+    auto pair2 = shape.cut();
+    return std::make_pair(Shape(pair1.first | pair2.second),
+                          Shape(pair1.second | pair2.first));
   }
 
   // Apply pin pusher

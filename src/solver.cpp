@@ -65,7 +65,7 @@ struct Solver {
 
   void displayShapes(std::vector<Shape> shapes, size_t maxSize = 10) {
     size_t size = std::min(shapes.size(), maxSize);
-    for (auto i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
       std::cout << shapes[i].toString() << std::endl;
     }
   }
@@ -80,10 +80,20 @@ struct Solver {
     return (shape.value & mask) == shape.value;
   }
 
+  bool hasCrystal(Shape shape) { return shape.find<Type::Crystal>() != 0; }
+
   bool oneCrystal(Shape shape) {
     Shape testShape;
     testShape.set(0, 0, Type::Crystal);
     return shape == testShape;
+  }
+
+  bool twoCrystal(Shape shape) {
+    return shape.value == repeat<T>(T(Type::Crystal), 2, 2);
+  }
+
+  bool twoParts(Shape shape) {
+    return (shape.get(0, 0) != Type::Empty) && (shape.get(0, 1) != Type::Empty);
   }
 
   bool topCrystal(Shape shape) {
@@ -111,24 +121,39 @@ struct Solver {
       // std::cout << format("Shape: {}", shape.toString()) << std::endl;
       size_t layers = shape.layers();
       if (shape.value == 0) {
-        // handle the null shape
+        // null shape
         solution.addShape(shape);
-        continue;
-      }
-      if (oneLayerSolid(shape) | oneLayerPin(shape)) {
-        solution.addShape(shape);
-        continue;
-      }
-      if (oneCrystal(shape)) {
-        // make one crystal: import a mold, make crystal, then cut>rotate>cut
-        solution.addOp(Spu::Op::DestroyWest);
-        solution.addOp(Spu::Op::Rotate1);
-        solution.addOp(Spu::Op::DestroyWest);
-        solution.addOp(Spu::Op::Crystal);
-        Shape mold(repeat<T>(T(Type::Shape), 2, PART));
-        mold.set(0, 1, Type::Empty);
-        solution.addShape(mold);
-        continue;
+      } else if (layers == 1) {
+        // one layer shapes
+        if (twoParts(shape)) {
+          // split into two parts, and swap them together
+          solution.addOp(Spu::Op::Rotate3);
+          solution.addOp(
+              Spu::Op::Trash);  // Trash anything in the second output
+          solution.addOp(Spu::Op::Swap);
+          solution.addOp(Spu::Op::Rotate1);
+          Shape shapeOne, shapeTwo;
+          shapeOne.set(0, 0, shape.get(0, 0));
+          shapeTwo.set(0, 0, shape.get(0, 1));
+          stack.push_back(shapeTwo);
+          stack.push_back(shapeOne);
+        } else if (hasCrystal(shape)) {
+          // make one crystal: import a mold, make crystal, then
+          // cut>rotate>cut
+          solution.addOp(Spu::Op::DestroyWest);
+          solution.addOp(Spu::Op::Rotate1);
+          solution.addOp(Spu::Op::DestroyWest);
+          solution.addOp(Spu::Op::Crystal);
+          // TODO: make the mold at the crystal location
+          Shape mold(repeat<T>(T(Type::Shape), 2, PART));
+          mold.set(0, 1, Type::Empty);
+          solution.addShape(mold);
+        } else {
+          // one part, not crystal
+          solution.addShape(shape);
+        }
+      } else {
+        solution.addShape(Shape(0));
       }
 
       // if (topCrystal == 0) {
@@ -139,14 +164,12 @@ struct Solver {
       //   shape = shape & ~mask;
       //   stack.push_back(shape);
       // } else {
-      solution.addShape(Shape(0));
       // }
       // create new shape and put back on stack
       // Shape::T mask = repeat<Shape::T>(3, 2, Shape::PART * (layers - 1));
     }
 
-    // std::cout << "Solution (before):" << std::endl;
-    // std::cout << std::endl << solution.toString() << std::endl;
+    std::cout << std::endl << solution.toString() << std::endl;
 
     Spu spu;
     std::vector<Shape> output = spu.build(solution);
@@ -210,7 +233,7 @@ void test() {
   using T = Shape::T;
   T value = repeat<T>(T(Type::Shape), 2, Shape::PART);
   Shape shape(value);
-  shape = shape.cut();
+  shape = shape.destroyHalf();
   std::cout << shape.toString() << std::endl;
 }
 

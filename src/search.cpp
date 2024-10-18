@@ -60,7 +60,7 @@ struct ConservativeQuadSearcher {
     for (size_t layer = 0; layer < layers; ++layer) {
       Shape combine = shape | fill;
       combine.set(layer, PART - 1, Type::Crystal);
-      enqueue(combine.cut() & mask);
+      enqueue(combine.destroyHalf() & mask);
     }
   }
 };
@@ -287,7 +287,7 @@ struct Searcher {
 
     // cut
     for (size_t angle = 0; angle < PART; ++angle) {
-      Shape cut = shape.rotate(angle).cut().equivalentHalves()[0];
+      Shape cut = shape.rotate(angle).destroyHalf().equivalentHalves()[0];
       if (halvesIdx.find(cut) != halvesIdx.end()) {
         continue;
       }
@@ -301,7 +301,7 @@ struct Searcher {
     // stack
     Shape top;
     for (Shape piece : singleLayerShapes) {
-      newShape = shape.stack(piece);
+      newShape = shape.stackOne(piece);
       // TODO: Fix the top piece during post processing
       top = Shape(piece.value >> 2 * PART * (LAYER - 1));
       build = Build{Op::Stack, shape, top};
