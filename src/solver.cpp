@@ -82,10 +82,10 @@ struct Solver {
 
   bool hasCrystal(Shape shape) { return shape.find<Type::Crystal>() != 0; }
 
-  bool oneCrystal(Shape shape) {
+  bool oneCrystalOnTop(Shape shape) {
     Shape testShape;
     testShape.set(0, 0, Type::Crystal);
-    return shape == testShape;
+    return shape.getLayer(shape.layers() - 1) == testShape;
   }
 
   bool twoCrystal(Shape shape) {
@@ -97,12 +97,15 @@ struct Solver {
   }
 
   bool topCrystal(Shape shape) {
-    // Shape::T mask = 0;
-    // // extract top layer
-    // Shape top = shape.getLayer(layers - 1);
-    // T topCrystal = top.find<Type::Crystal>();
-    // // std::cout << std::format("topCrystal: {}", topCrystal) << std::endl;
-    return false;
+    Shape top = shape.getLayer(shape.layers() - 1);
+    return top.find<Type::Crystal>() != 0;
+  }
+
+  // simple pin push (no breaking)
+  bool simplePin(Shape shape) {
+    T empty = shape.getLayer(1).find<Type::Empty>();
+    T pins = ~empty & repeat<T>(T(Type::Pin), 2, PART);
+    return shape.getLayer(0).value == pins;
   }
 
   // This solver only handles half-shapes (for now).
@@ -152,21 +155,32 @@ struct Solver {
           // one part, not crystal
           solution.addShape(shape);
         }
+      } else if (simplePin(shape)) {
+        solution.addOp(Spu::Op::PinPush);
+        shape = Shape(shape.value >> PART * 2);
+        stack.push_back(shape);
+      } else if (!topCrystal(shape)) {
+        // simple stack
+        solution.addOp(Spu::Op::Stack);
+        T mask = repeat<T>(3, 2, PART) << (2 * PART * (layers - 1));
+        Shape top = Shape(shape.value >> (2 * PART * (layers - 1)));
+        Shape bottom = shape & ~mask;
+        solution.addShape(top);
+        stack.push_back(bottom);
+        // TODO: quad swapping
+        // } else if (oneCrystalOnTop(shape)) {
+        //   Top and bottom need molds
+        //   // TODO: make the mold at the crystal location
+        //   Shape mold(repeat<T>(T(Type::Shape), 2, PART));
+        //   mold.set(0, 1, Type::Empty);
+        //   solution.addShape(mold);
+        //   solution.addOp(Spu::Op::Crystal);
+        //   T mask = repeat<T>(3, 2, PART) << (2 * PART * (layers - 1));
+        //   Shape bottom = shape & ~mask;
+        //   stack.push_back(bottom);
       } else {
         solution.addShape(Shape(0));
       }
-
-      // if (topCrystal == 0) {
-      //   // no crystal on top
-      //   solution.addOp(Spu::Op::Stack);
-      //   solution.addShape(top);
-      //   mask = top.value << (2 * PART * (layers - 1));
-      //   shape = shape & ~mask;
-      //   stack.push_back(shape);
-      // } else {
-      // }
-      // create new shape and put back on stack
-      // Shape::T mask = repeat<Shape::T>(3, 2, Shape::PART * (layers - 1));
     }
 
     std::cout << std::endl << solution.toString() << std::endl;
