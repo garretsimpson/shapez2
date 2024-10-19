@@ -53,5 +53,17 @@
     "typeinfo": "cpp",
     "variant": "cpp"
   },
-  "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make"
+  "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make",
+  "makefile.launchConfigurations": [
+    {
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\solver.exe",
+      "binaryArgs": []
+    },
+    {
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\display.exe",
+      "binaryArgs": []
+    }
+  ]
 }

@@ -106,8 +106,7 @@ struct Spu {
         continue;
       }
       if (stack.size() < 1) {
-        std::cerr << "ERROR: Operation requires at least one shape"
-                  << std::endl;
+        std::cerr << "ERROR: Operation requires at least one shape" << std::endl;
         return result;
       }
       shape = stack.back();

@@ -33,8 +33,7 @@ struct Solver {
       left = left.equivalentHalves()[0];
       right = right.equivalentHalves()[0];
       if (left.value == 0 || right.value == 0) return true;
-      if (halves.find(left) != halves.end() &&
-          halves.find(right) != halves.end()) {
+      if (halves.find(left) != halves.end() && halves.find(right) != halves.end()) {
         return true;
       }
     }
@@ -88,13 +87,9 @@ struct Solver {
     return shape.getLayer(shape.layers() - 1) == testShape;
   }
 
-  bool twoCrystal(Shape shape) {
-    return shape.value == repeat<T>(T(Type::Crystal), 2, 2);
-  }
+  bool twoCrystal(Shape shape) { return shape.value == repeat<T>(T(Type::Crystal), 2, 2); }
 
-  bool twoParts(Shape shape) {
-    return (shape.get(0, 0) != Type::Empty) && (shape.get(0, 1) != Type::Empty);
-  }
+  bool twoParts(Shape shape) { return (shape.get(0, 0) != Type::Empty) && (shape.get(0, 1) != Type::Empty); }
 
   bool topCrystal(Shape shape) {
     Shape top = shape.getLayer(shape.layers() - 1);
@@ -131,8 +126,7 @@ struct Solver {
         if (twoParts(shape)) {
           // split into two parts, and swap them together
           solution.addOp(Spu::Op::Rotate3);
-          solution.addOp(
-              Spu::Op::Trash);  // Trash anything in the second output
+          solution.addOp(Spu::Op::Trash);  // Trash anything in the second output
           solution.addOp(Spu::Op::Swap);
           solution.addOp(Spu::Op::Rotate1);
           Shape shapeOne, shapeTwo;
@@ -215,9 +209,7 @@ struct Solver {
       }
     }
 
-    std::cout << std::format("knowns {}, unknowns: {}", knowns.size(),
-                             unknowns.size())
-              << std::endl;
+    std::cout << std::format("knowns {}, unknowns: {}", knowns.size(), unknowns.size()) << std::endl;
     displayShapes(unknowns);
   }
 };

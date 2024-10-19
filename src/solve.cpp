@@ -20,16 +20,14 @@ struct Solve {
   }
 
   std::optional<std::pair<Shape, Shape>> findSwap(Shape shape) {
-    constexpr Shape::T mask = repeat<Shape::T>(
-        repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
+    constexpr Shape::T mask = repeat<Shape::T>(repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
     for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {
       Shape left{shape.rotate(angle).value & mask};
       Shape right{shape.rotate(angle + Shape::PART / 2).value & mask};
       auto pair = std::make_pair(left, right.rotate(angle + Shape::PART / 2));
       left = left.equivalentHalves()[0];
       right = right.equivalentHalves()[0];
-      if (halves.find(left) != halves.end() &&
-          halves.find(right) != halves.end()) {
+      if (halves.find(left) != halves.end() && halves.find(right) != halves.end()) {
         return pair;
       }
     }

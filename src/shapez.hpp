@@ -177,21 +177,17 @@ struct Shape {
   // rotate the shape N times - counter-clockwise (to the left)
   constexpr Shape rotate(size_t N = 1) const {
     T mask = repeat<T>(repeat<T>(3, 2, N), PART * 2, LAYER);
-    return Shape(((value & mask) << (2 * (PART - N))) |
-                 ((value & ~mask) >> (2 * N)));
+    return Shape(((value & mask) << (2 * (PART - N))) | ((value & ~mask) >> (2 * N)));
   }
 
   // swap two shapes together (assume there is no conflict)
-  constexpr Shape operator|(Shape other) const {
-    return Shape(value | other.value);
-  }
+  constexpr Shape operator|(Shape other) const { return Shape(value | other.value); }
 
   // process the shape by crystal generator
   constexpr Shape crystalize() const {
     T mask = find<Type::Empty>() | find<Type::Pin>();
     mask &= repeat<T>(3, 2, layers() * PART);
-    return Shape((mask & repeat<T>(T(Type::Crystal), 2, PART * LAYER)) |
-                 ((value & ~mask)));
+    return Shape((mask & repeat<T>(T(Type::Crystal), 2, PART * LAYER)) | ((value & ~mask)));
   }
 
   // Returns a bitmask of all the parts that are supported
@@ -323,14 +319,12 @@ struct Shape {
           T connected = extract(layer, part);
           // Find in the reverse direction
           if (part == 0) {
-            for (size_t i = PART - 1;
-                 i > 0 && Shape(v).get(layer, i) == Type::Shape; --i) {
+            for (size_t i = PART - 1; i > 0 && Shape(v).get(layer, i) == Type::Shape; --i) {
               connected |= extract(layer, i);
             }
           }
           // Find in the forward direction
-          while (part + 1 < PART &&
-                 Shape(v).get(layer, part + 1) == Type::Shape) {
+          while (part + 1 < PART && Shape(v).get(layer, part + 1) == Type::Shape) {
             ++part;
             connected |= extract(layer, part);
           }
@@ -435,8 +429,7 @@ struct Shape {
   constexpr std::pair<Shape, Shape> swap(Shape shape) const {
     auto pair1 = cut();
     auto pair2 = shape.cut();
-    return std::make_pair(Shape(pair1.first | pair2.second),
-                          Shape(pair1.second | pair2.first));
+    return std::make_pair(Shape(pair1.first | pair2.second), Shape(pair1.second | pair2.first));
   }
 
   // Apply pin pusher
@@ -538,9 +531,7 @@ struct Build {
   Shape shape1;
   Shape shape2;
 
-  constexpr size_t getCost() const {
-    return shape1.bitCount() + shape2.bitCount();
-  }
+  constexpr size_t getCost() const { return shape1.bitCount() + shape2.bitCount(); }
 
   std::string toString() const {
     std::string ret = "";
@@ -557,13 +548,9 @@ struct Solution {
   Shape shape;
   Build build;
 
-  constexpr bool operator<(const Solution &o) const {
-    return shape.value < o.shape.value;
-  }
+  constexpr bool operator<(const Solution &o) const { return shape.value < o.shape.value; }
 
-  std::string toString() const {
-    return shape.toString() + " <- " + build.toString();
-  }
+  std::string toString() const { return shape.toString() + " <- " + build.toString(); }
 };
 
 struct ShapeSet {
@@ -578,12 +565,10 @@ struct ShapeSet {
 
     size = halves.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(halves.data()),
-               size * sizeof(Shape));
+    file.write(reinterpret_cast<const char *>(halves.data()), size * sizeof(Shape));
     size = solutions.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(solutions.data()),
-               size * sizeof(Solution));
+    file.write(reinterpret_cast<const char *>(solutions.data()), size * sizeof(Solution));
   }
 
   static ShapeSet load(const std::string &filename) {
@@ -594,12 +579,10 @@ struct ShapeSet {
 
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.halves.resize(size);
-    file.read(reinterpret_cast<char *>(ret.halves.data()),
-              size * sizeof(Shape));
+    file.read(reinterpret_cast<char *>(ret.halves.data()), size * sizeof(Shape));
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.shapes.resize(size);
-    file.read(reinterpret_cast<char *>(ret.shapes.data()),
-              size * sizeof(Shape));
+    file.read(reinterpret_cast<char *>(ret.shapes.data()), size * sizeof(Shape));
     return ret;
   }
 
@@ -611,12 +594,10 @@ struct ShapeSet {
 
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.halves.resize(size);
-    file.read(reinterpret_cast<char *>(ret.halves.data()),
-              size * sizeof(Shape));
+    file.read(reinterpret_cast<char *>(ret.halves.data()), size * sizeof(Shape));
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.solutions.resize(size);
-    file.read(reinterpret_cast<char *>(ret.solutions.data()),
-              size * sizeof(Solution));
+    file.read(reinterpret_cast<char *>(ret.solutions.data()), size * sizeof(Solution));
     return ret;
   }
 };
@@ -625,7 +606,5 @@ struct ShapeSet {
 
 template <>
 struct std::hash<Shapez::Shape> {
-  std::size_t operator()(const Shapez::Shape &shape) const noexcept {
-    return shape.value;
-  }
+  std::size_t operator()(const Shapez::Shape &shape) const noexcept { return shape.value; }
 };

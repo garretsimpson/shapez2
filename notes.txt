@@ -653,3 +653,54 @@ Idea
 - solvers probably have sub-solvers (nested).
 - Probably need to pass information along with shapes to future solving steps.
 - And probably need to solve some shapes in parallel.
+
+Idea
+- Find all halves with gaps.
+- Determine if the adjacent quarter can have gaps, or is strictly supporting (a spine).
+
+Halves where quad 1 has a gap...
+
+Halves: 67669
+Found: 5320
+-P--:SS--:c---:----:----
+-S--:SS--:c---:----:----
+-c--:SS--:c---:----:----
+-P--:Sc--:c---:----:----
+-S--:Sc--:c---:----:----
+...
+
+Halves where quad 2 has a gap...
+
+Halves: 67669
+Found: 2627
+PS--:P---:cc--:----:----
+PS--:S---:cc--:----:----
+SS--:S---:cc--:----:----
+cS--:S---:cc--:----:----
+PS--:c---:cc--:----:----
+...
+
+Gaps in both quads...
+
+Halves: 67669
+Found: 94
+-P--:SS--:S---:cc--:----
+-S--:SS--:S---:cc--:----
+-P--:SS--:c---:cc--:----
+-S--:SS--:c---:cc--:----
+-P--:SS--:S---:Sc--:c---
+...
+
+Floating crystals in both quads...
+Halves: 67669
+Found: 8
+PS--:P---:Sc--:-P--:cS--
+PS--:S---:Sc--:-P--:cS--
+SS--:S---:Sc--:-P--:cS--
+cS--:S---:Sc--:-P--:cS--
+PS--:P---:Sc--:-S--:cS--
+PS--:S---:Sc--:-S--:cS--
+SS--:S---:Sc--:-S--:cS--
+cS--:S---:Sc--:-S--:cS--
+
+P-Ru----:P-------:Rucc----:--P-----:ccRu----
