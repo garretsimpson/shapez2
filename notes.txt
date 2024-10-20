@@ -28,18 +28,18 @@ Pre-calculated 905 halves
 LAYER = 4
 
 ...
-# shapes: 349728289
-# halves: 8148
-# shapes whose halves aren't stable: 2002457
+# shapes: 349,728,289
+# halves: 8,148
+# shapes whose halves aren't stable: 2,002,457
 # quarters: 152
 
 LAYER = 5
 
 Found 435 quarters
-Pre-calculated 62670 halves
-# shapes: 26929624298
-# halves: 67669
-# shapes whose halves aren't stable: 251172538
+Pre-calculated 62,670 halves
+# shapes: 26,929,624,298
+# halves: 67,669
+# shapes whose halves aren't stable: 251,172,538
 # quarters: 476
 
 Ideas
@@ -704,3 +704,47 @@ SS--:S---:Sc--:-S--:cS--
 cS--:S---:Sc--:-S--:cS--
 
 P-Ru----:P-------:Rucc----:--P-----:ccRu----
+
+Idea
+- Can the quad swapping phase be split?
+- Like undo drops, then undo breaks, then do gap-less quad swapping.
+- I don't think a gap-less full shape can then do gap making.
+- Proably need to do gaps and drops on quads, then do quad swapping.
+
+Factory
+- Make gapless quads (stackers and crystal gens)
+- Make gaps and drops and pins (crystal breaking with swap or pin push)
+- quad-swap
+- pin-push (snake breaking)
+- layer stacking
+
+Solver
+- Undo stacking - output top shapes (normal and hybrid)
+- Undo pin push (make snake, may have internal drops)
+- Undo quad swap (find swap order of quarters)
+- Undo pins and drops and gaps
+- Output gap-less quarters
+
+Notes
+- Each of these steps is optional.
+- For example there may be no parts to unstack, as the shape may already be a pin-shape (like Claw).
+- Or the entire shape may be stacked, and it's done.
+
+Notes
+- Saving the solutions appears to have crashed again.
+- Windows appars to have put the computer to sleep during saving the file?
+- I had double checked that sleep was set to "never".
+- Windows memory was really full (30+ GB), then dropped by half after waiting 10+ minutes.
+- The file was zero length for a while.
+- Then it had all of the half shapes and only a few of the whole shapes, like last time.
+- After waiting 15+ minutes...
+- The CPU is still around 15%, but memory is very low (400 MB) and disk usage is zero.
+- Is there a maximum file size?
+- The size parameters to write() should be 64 bits, but need to verify.
+- Why is it writting only some?  Maybe it is writting more, but the values are zero because they are not in memory?
+- Should have crashed if out of memory, but it's C++ so who knows?
+
+Ideas
+- Save halves, complex shapes, and solutions separately.
+- Delete temp storage before saving the next.
+- Save solutions in chunks.

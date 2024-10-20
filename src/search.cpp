@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <deque>
+#include <filesystem>
 #include <format>
 #include <iostream>
 #include <optional>
@@ -292,14 +293,12 @@ struct Searcher {
     Build build;
 
     // stack
-    Shape top;
     for (Shape piece : singleLayerShapes) {
       newShape = shape.stackOne(piece);
-      // TODO: Fix the top piece during post processing
-      top = Shape(piece.value >> 2 * PART * (LAYER - 1));
+      // TODO: Drop the top piece during post processing
+      Shape top = Shape(piece.value >> 2 * PART * (LAYER - 1));
       build = Build{Op::Stack, shape, top};
       enqueue(newShape, build);
-      // TODO: Fix the top piece during post processing
     }
 
     // pin pusher
@@ -324,16 +323,6 @@ struct Searcher {
       queueSet.insert(shape);
     }
 
-    return;
-
-    const Shape CLAW = Shape("P---P---:P-------:cRCu--Cu:--------").equivalentShapes()[0];
-
-    const Shape DEBUG_SHAPE = Shape("P--P:SSS-:----:----").equivalentShapes()[0];
-
-    // if (shape == CLAW) {
-    //   std::cout << "CLAW: " << build.toString() << std::endl;
-    // }
-
     // if recursive build, return
     // shape1 is the old shape, and is already a key shape.
     if (shape == build.shape1) return;
@@ -342,9 +331,6 @@ struct Searcher {
     if (it == builds.end()) {
       // Not found, add it
       builds[shape] = build;
-      if (shape == DEBUG_SHAPE) {
-        std::cout << "DEBUG: " << build.toString() << " FOUND" << std::endl;
-      }
     } else {
       auto oldBuild = it->second;
       // Duplicate found, check cost
@@ -353,18 +339,12 @@ struct Searcher {
       if (newCost < oldCost) {
         // Replace when lower cost found
         builds[shape] = build;
-        if (shape == DEBUG_SHAPE) {
-          std::cout << "DEBUG: " << build.toString() << " LOWER" << std::endl;
-        }
       } else if (newCost == oldCost) {
         // Replace if the same cost, but fewer number of layers
         auto oldLayers = oldBuild.shape1.layers() + oldBuild.shape2.layers();
         auto newLayers = build.shape1.layers() + build.shape2.layers();
         if (newLayers < oldLayers) {
           builds[shape] = build;
-          if (shape == DEBUG_SHAPE) {
-            std::cout << "DEBUG: " << build.toString() << " LAYERS" << std::endl;
-          }
         }
       }
     }
@@ -379,27 +359,32 @@ int main(int argc, char *argv[]) {
   searcher.summarize();
 
   if (argc >= 2) {
-    Shapez::ShapeSet set;
-    set.halves.insert(set.halves.end(), searcher.halves.begin(), searcher.halves.end());
+    Shapez::ShapeSet shapeSet;
+    shapeSet.halves.insert(shapeSet.halves.end(), searcher.halves.begin(), searcher.halves.end());
     std::cout << "Sorting halves..." << std::endl;
-    std::sort(set.halves.begin(), set.halves.end());
+    std::sort(shapeSet.halves.begin(), shapeSet.halves.end());
 
-    set.solutions.resize(searcher.builds.size());
+    shapeSet.shapes.insert(shapeSet.shapes.end(), searcher.shapes.begin(), searcher.shapes.end());
+    std::cout << "Sorting shapes..." << std::endl;
+    std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
+
+    std::string filename = argv[1];
+    std::cout << std::format("Saving {} ...", filename) << std::endl;
+    shapeSet.save(filename);
+    shapeSet.clear();
+
+    auto name = Shapez::SolutionSet::getName(filename);
+    std::cout << std::format("Saving {} ...", name) << std::endl;
+    Shapez::SolutionSet solnSet;
+    solnSet.solutions.resize(searcher.builds.size());
     Shapez::Solution solution;
     size_t i = 0;
     for (auto it : searcher.builds) {
       solution = {it.first, it.second};
-      set.solutions[i++] = solution;
+      solnSet.solutions[i++] = solution;
     }
-    std::cout << "Sorting shapes..." << std::endl;
-    std::sort(set.solutions.begin(), set.solutions.end());
+    solnSet.save(filename);
 
-    std::cout << "Saving..." << std::endl;
-    set.save(argv[1]);
-
-    // for (auto it : set.solutions) {
-    //   std::cout << it.toString() << std::endl;
-    // }
     std::cout << "DONE" << std::endl;
   }
 

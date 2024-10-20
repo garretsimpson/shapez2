@@ -14,21 +14,27 @@ int main(int argc, char* argv[]) {
     return 1;
   }
 
-  ShapeSet set = ShapeSet::load(argv[1]);
-  // ska::bytell_hash_set<Shape> halves{set.halves.begin(), set.halves.end()};
+  std::string filename = argv[1];
+  ShapeSet shapeSet = ShapeSet::load(filename);
 
-  std::cout << "Halves: " << set.halves.size() << std::endl;
-  std::cout << "Shapes: " << set.solutions.size() << std::endl;
-
-  for (auto it : set.halves) {
+  std::cout << "Halves: " << shapeSet.halves.size() << std::endl;
+  std::cout << "Shapes: " << shapeSet.shapes.size() << std::endl;
+  for (auto it : shapeSet.halves) {
     std::cout << it.toString() << std::endl;
   }
   std::cout << std::endl;
-
-  for (auto it : set.solutions) {
+  for (auto it : shapeSet.shapes) {
     std::cout << it.toString() << std::endl;
   }
   std::cout << std::endl;
+  shapeSet.clear();
+
+  SolutionSet solnSet = SolutionSet::load(filename);
+  std::sort(solnSet.solutions.begin(), solnSet.solutions.end());
+  for (auto it : solnSet.solutions) {
+    std::cout << it.toString() << std::endl;
+  }
+  solnSet.clear();
 
   return 0;
 }

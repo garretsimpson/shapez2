@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cstdint>
+#include <filesystem>
 #include <format>
 #include <fstream>
 #include <stdexcept>
@@ -505,7 +506,7 @@ struct Shape {
 };
 
 enum class Op : char {
-  Rotate,
+  NOP,
   Stack,
   Swap,
   Crystal,
@@ -549,14 +550,17 @@ struct Solution {
   Build build;
 
   constexpr bool operator<(const Solution &o) const { return shape.value < o.shape.value; }
-
   std::string toString() const { return shape.toString() + " <- " + build.toString(); }
 };
 
 struct ShapeSet {
   std::vector<Shape> halves;
   std::vector<Shape> shapes;
-  std::vector<Solution> solutions;
+
+  void clear() {
+    halves.clear();
+    shapes.clear();
+  }
 
   void save(const std::string &filename) const {
     using namespace std;
@@ -566,9 +570,9 @@ struct ShapeSet {
     size = halves.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
     file.write(reinterpret_cast<const char *>(halves.data()), size * sizeof(Shape));
-    size = solutions.size();
+    size = shapes.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(solutions.data()), size * sizeof(Solution));
+    file.write(reinterpret_cast<const char *>(shapes.data()), size * sizeof(Shape));
   }
 
   static ShapeSet load(const std::string &filename) {
@@ -585,19 +589,38 @@ struct ShapeSet {
     file.read(reinterpret_cast<char *>(ret.shapes.data()), size * sizeof(Shape));
     return ret;
   }
+};
 
-  static ShapeSet loadNew(const std::string &filename) {
+struct SolutionSet {
+  std::vector<Solution> solutions;
+
+  static std::string getName(const std::string &filename) {
+    auto path = std::filesystem::path(filename);
+    return path.stem().string() + "_soln" + path.extension().string();
+  }
+
+  void clear() { solutions.clear(); }
+
+  void save(const std::string &filename) const {
     using namespace std;
-    ShapeSet ret;
-    ifstream file{filename, ios::in | ios::binary};
-    uint32_t size;
+    ofstream file{getName(filename), ios::out | ios::binary | ios::trunc};
+    uint64_t size;
 
-    file.read(reinterpret_cast<char *>(&size), sizeof(size));
-    ret.halves.resize(size);
-    file.read(reinterpret_cast<char *>(ret.halves.data()), size * sizeof(Shape));
+    size = solutions.size();
+    file.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    file.write(reinterpret_cast<const char *>(solutions.data()), size * sizeof(Solution));
+  }
+
+  static SolutionSet load(const std::string &filename) {
+    using namespace std;
+    SolutionSet ret;
+    ifstream file{getName(filename), ios::in | ios::binary};
+    uint64_t size;
+
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.solutions.resize(size);
     file.read(reinterpret_cast<char *>(ret.solutions.data()), size * sizeof(Solution));
+
     return ret;
   }
 };

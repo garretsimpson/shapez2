@@ -51,7 +51,11 @@
     "streambuf": "cpp",
     "text_encoding": "cpp",
     "typeinfo": "cpp",
-    "variant": "cpp"
+    "variant": "cpp",
+    "codecvt": "cpp",
+    "ratio": "cpp",
+    "iomanip": "cpp",
+    "sstream": "cpp"
   },
   "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make",
   "makefile.launchConfigurations": [
