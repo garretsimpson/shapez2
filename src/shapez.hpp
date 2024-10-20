@@ -515,6 +515,8 @@ enum class Op : char {
 
 inline std::string opCode(Op op) {
   switch (op) {
+    case Op::NOP:
+      return "<>";
     case Op::Stack:
       return "ST";
     case Op::Swap:
@@ -559,7 +561,9 @@ struct ShapeSet {
 
   void clear() {
     halves.clear();
+    halves.shrink_to_fit();
     shapes.clear();
+    shapes.shrink_to_fit();
   }
 
   void save(const std::string &filename) const {
@@ -591,6 +595,8 @@ struct ShapeSet {
   }
 };
 
+// Note: File stream read() and write() seem to have a problem when size is more than 31 bits.
+// Using a CHUNK_SIZE for both.
 struct SolutionSet {
   std::vector<Solution> solutions;
 
@@ -599,28 +605,42 @@ struct SolutionSet {
     return path.stem().string() + "_soln" + path.extension().string();
   }
 
-  void clear() { solutions.clear(); }
+  void clear() {
+    solutions.clear();
+    solutions.shrink_to_fit();
+  }
 
   void save(const std::string &filename) const {
     using namespace std;
+    const size_t CHUNK_SIZE = 0x70000000ULL;
+
     ofstream file{getName(filename), ios::out | ios::binary | ios::trunc};
-    uint64_t size;
+    uint32_t size;
 
     size = solutions.size();
     file.write(reinterpret_cast<const char *>(&size), sizeof(size));
-    file.write(reinterpret_cast<const char *>(solutions.data()), size * sizeof(Solution));
+    size_t totalSize = size * sizeof(Solution);
+    for (size_t i = 0; i < totalSize; i += CHUNK_SIZE) {
+      size = min(CHUNK_SIZE, totalSize - i);
+      file.write(reinterpret_cast<const char *>(solutions.data()) + i, size);
+    }
   }
 
   static SolutionSet load(const std::string &filename) {
     using namespace std;
+    const size_t CHUNK_SIZE = 0x70000000ULL;
+
     SolutionSet ret;
     ifstream file{getName(filename), ios::in | ios::binary};
-    uint64_t size;
+    uint32_t size;
 
     file.read(reinterpret_cast<char *>(&size), sizeof(size));
     ret.solutions.resize(size);
-    file.read(reinterpret_cast<char *>(ret.solutions.data()), size * sizeof(Solution));
-
+    size_t totalSize = size * sizeof(Solution);
+    for (size_t i = 0; i < totalSize; i += CHUNK_SIZE) {
+      size = min(CHUNK_SIZE, totalSize - i);
+      file.read(reinterpret_cast<char *>(ret.solutions.data()) + i, size);
+    }
     return ret;
   }
 };

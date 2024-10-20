@@ -353,12 +353,55 @@ struct Searcher {
 
 }  // namespace Shapez
 
+void testSolnSet() {
+  using namespace Shapez;
+
+  const size_t SIZE = 252000000;
+  SolutionSet solnSet1;
+  solnSet1.solutions.resize(SIZE);
+  size_t i = 0;
+  for (size_t i = 0; i < SIZE; ++i) {
+    Build build = {Op::Stack, Shape(i + 1), Shape(i + 2)};
+    Solution solution = {Shape(i + 3), build};
+    solnSet1.solutions[i] = solution;
+  }
+  std::cout << solnSet1.solutions[0].toString() << std::endl;
+  std::cout << solnSet1.solutions[128].toString() << std::endl;
+  std::cout << "Saving..." << std::endl;
+  solnSet1.save("test");
+  solnSet1.clear();
+
+  std::cout << "Loading..." << std::endl;
+  SolutionSet solnSet2 = solnSet1.load("test");
+  std::cout << std::format("Size: {}", solnSet2.solutions.size()) << std::endl;
+  std::cout << solnSet2.solutions[0].toString() << std::endl;
+  std::cout << solnSet2.solutions[128].toString() << std::endl;
+  std::cout << solnSet2.solutions[SIZE - 1].toString() << std::endl;
+  size_t size = solnSet2.solutions.size();
+  for (size_t i = 0; i < size; ++i) {
+    if (solnSet2.solutions[i].build.op != Op::NOP) continue;
+    std::cout << std::format("Found NOP at {}", i) << std::endl;
+    break;
+  }
+  solnSet2.clear();
+}
+
 int main(int argc, char *argv[]) {
   Shapez::Searcher searcher;
   searcher.run();
   searcher.summarize();
 
   if (argc >= 2) {
+    // Clear unneeded data
+    searcher.halvesIdx.clear();
+    searcher.halvesIdx.shrink_to_fit();
+    searcher.quarters.clear();
+    searcher.quarters.shrink_to_fit();
+    searcher.queue.clear();
+    searcher.queue.shrink_to_fit();
+    searcher.queueSet.clear();
+    searcher.queueSet.shrink_to_fit();
+
     Shapez::ShapeSet shapeSet;
     shapeSet.halves.insert(shapeSet.halves.end(), searcher.halves.begin(), searcher.halves.end());
     std::cout << "Sorting halves..." << std::endl;
@@ -373,7 +416,12 @@ int main(int argc, char *argv[]) {
     shapeSet.save(filename);
     shapeSet.clear();
 
-    auto name = Shapez::SolutionSet::getName(filename);
+    searcher.halves.clear();
+    searcher.halves.shrink_to_fit();
+    searcher.shapes.clear();
+    searcher.shapes.shrink_to_fit();
+
+    std::string name = Shapez::SolutionSet::getName(filename);
     std::cout << std::format("Saving {} ...", name) << std::endl;
     Shapez::SolutionSet solnSet;
     solnSet.solutions.resize(searcher.builds.size());
@@ -384,6 +432,7 @@ int main(int argc, char *argv[]) {
       solnSet.solutions[i++] = solution;
     }
     solnSet.save(filename);
+    solnSet.clear();
 
     std::cout << "DONE" << std::endl;
   }

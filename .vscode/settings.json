@@ -60,13 +60,18 @@
   "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make",
   "makefile.launchConfigurations": [
     {
-      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2",
       "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\solver.exe",
       "binaryArgs": []
     },
     {
-      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2",
       "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\display.exe",
+      "binaryArgs": []
+    },
+    {
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2",
+      "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\search5.exe",
       "binaryArgs": []
     }
   ]
