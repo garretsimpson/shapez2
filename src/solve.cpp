@@ -6,17 +6,21 @@
 namespace Shapez {
 
 struct Solve {
-  ShapeSet set;
+  ShapeSet shapeSet;
+  SolutionSet solnSet;
   ska::bytell_hash_set<Shape> halves;
   ska::bytell_hash_map<Shape, Build> builds;
 
   Solve(char* filename) {
-    set = ShapeSet::load(filename);
+    shapeSet = ShapeSet::load(filename);
+    halves = {shapeSet.halves.begin(), shapeSet.halves.end()};
+    shapeSet.clear();
 
-    halves = {set.halves.begin(), set.halves.end()};
-    for (auto it : set.solutions) {
+    solnSet = SolutionSet::load(filename);
+    for (auto it : solnSet.solutions) {
       builds[it.shape] = it.build;
     }
+    solnSet.clear();
   }
 
   std::optional<std::pair<Shape, Shape>> findSwap(Shape shape) {
@@ -53,6 +57,8 @@ struct Solve {
         Build build{Op::Swap, swapShapes->first, swapShapes->second};
         solution = {shape, build};
         result += solution.toString() + "\n";
+        result += run(swapShapes->first, indent + 1);
+        result += run(swapShapes->second, indent + 1);
       }
     } else if (auto it = builds.find(shape); it != builds.end()) {
       // complex shape

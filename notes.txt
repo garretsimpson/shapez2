@@ -42,6 +42,18 @@ Pre-calculated 62,670 halves
 # shapes whose halves aren't stable: 251,172,538
 # quarters: 476
 
+...
+Processed 26920000002 shapes, 476 quarters, 67669/67669 halves, 702905/702905/250646427 shapes
+# shapes: 26929624298
+# halves: 67669
+# shapes whose halves aren't stable: 251172538
+# quarters: 476
+Sorting halves...
+Sorting shapes...
+Saving dump5 ...
+Saving dump5_soln ...
+DONE
+
 Ideas
 - Create a program to display the first 10 shapes in the shapes list.  DONE
 
@@ -747,4 +759,11 @@ Notes
 Ideas
 - Save halves, complex shapes, and solutions separately.
 - Delete temp storage before saving the next.
-- Save solutions in chunks.
+- Save solutions in chunks.  DONE
+
+Idea
+- Save solutions incrementally, like with each log count or some chunk value.
+- Would only need to store one chunk of solutions in memory at a time.
+- No, actually that would be okay if I wanted to store all found solutions.
+- Storing just the "best" solution would require the shape and a cost for each...
+- And storing all the builds until the end, when we know it won't find any lower cost builds.

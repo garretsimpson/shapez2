@@ -15,12 +15,8 @@ int main(int argc, char* argv[]) {
 
   ska::bytell_hash_set<Shape> halves;
   ska::bytell_hash_set<Shape> shapes;
-  // ska::bytell_hash_map<Shape, Build> builds;
 
   halves = {set.halves.begin(), set.halves.end()};
-  // for (auto it : set.solutions) {
-  //   builds[it.shape] = it.build;
-  // }
 
   auto creatable = [&](Shape shape) {
     constexpr Shape::T mask = repeat<Shape::T>(repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
@@ -36,7 +32,6 @@ int main(int argc, char* argv[]) {
 
     Shape repr = shape.equivalentShapes()[0];
     bool found = std::binary_search(set.shapes.begin(), set.shapes.end(), repr);
-    // bool found = (builds.find(shape) != builds.end());
     return found;
   };
 
