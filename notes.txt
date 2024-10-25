@@ -767,3 +767,50 @@ Idea
 - No, actually that would be okay if I wanted to store all found solutions.
 - Storing just the "best" solution would require the shape and a cost for each...
 - And storing all the builds until the end, when we know it won't find any lower cost builds.
+
+The One Hundred...
+----P-P-:----P-P-:CuCuCuCu:--P-P---:crCuCuCu
+P-P-----:P-P-----:CuCuCuCu:--P-P---:crCuCuCu
+
+Input: --PP:--PP:SSSS:-PP-:cSSS
+--PP:--PP:SSSS:-PP-:cSSS <- ST(--PP:--PP:SSSS:P--P:ScS-, ---S:----:----:----:----) 15
+  --PP:--PP:SSSS:P--P:ScS- <- ST(--PP:--PP:SSSS:P---:ScS-, ---P:----:----:----:----) 14
+    --PP:--PP:SSSS:P---:ScS- <- ST(--PP:--PP:SSS-:P---:ScS-, ---S:----:----:----:----) 13
+      --PP:--PP:SSS-:P---:ScS- <- ST(--PP:--P-:SSS-:P---:ScS-, ---P:----:----:----:----) 12
+        --PP:--P-:SSS-:P---:ScS- <- PP(cP--:cSSS:cc-P:cScS:c---) 21
+          cP--:cSSS:cc-P:cScS:c--- <- SW(P---:SS--:c---:Sc--:----, --c-:-Sc-:-Pc-:-Sc-:--c-) 21
+            -P--:SS--:-c--:cS--:---- <>
+            c---:cS--:cP--:cS--:c--- <>
+        P---:----:----:----:---- <>
+      S---:----:----:----:---- <>
+    P---:----:----:----:---- <>
+  S---:----:----:----:---- <>
+
+  PP--:PP--:SSSS:-PP-:cSSS <- ST(PP--:PP--:SSSS:P--P:ScS-, ---S:----:----:----:----) 15
+  PP--:PP--:SSSS:P--P:ScS- <- ST(PP--:PP--:SSSS:P---:ScS-, ---P:----:----:----:----) 14
+    PP--:PP--:SSSS:P---:ScS- <- PP(--PP:SSSS:cc-P:cScS:c---) 19
+      --PP:SSSS:cc-P:cScS:c--- <- SW(-P--:SS--:c---:Sc--:----, -P--:-SS-:-Pc-:-Sc-:--c-) 19
+        P---:SS--:-c--:cS--:---- <>
+        -P--:SS--:cP--:cS--:c--- <>
+    P---:----:----:----:---- <>
+  S---:----:----:----:---- <>
+
+Idea
+- Compute how many shapes are stackable, can be solved with CROS, etc.
+- And how many cannot.
+
+Simple stack without crystals
+todo 2010605
+knowns 144607, unknowns: 1865998
+----:----:----:----
+c---:----:----:----
+cP--:----:----:----
+cS--:----:----:----
+cc--:----:----:----
+c---:P---:----:----
+cP--:P---:----:----
+cS--:P---:----:----
+Pc--:P---:----:----
+Sc--:P---:----:----
+DONE
+

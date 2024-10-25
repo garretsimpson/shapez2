@@ -5,12 +5,14 @@
 
 namespace Shapez {
 
-ShapeSet set;
 ska::bytell_hash_set<Shape> halves;
+ska::bytell_hash_set<Shape> shapes;
 
 void init(const char* filename) {
-  set = ShapeSet::load(filename);
+  ShapeSet set = ShapeSet::load(filename);
   halves = {set.halves.begin(), set.halves.end()};
+  shapes = {set.shapes.begin(), set.shapes.end()};
+  set.clear();
 }
 
 bool shapeFilter(Shape shape, size_t quad = 0) {
@@ -28,8 +30,8 @@ bool shapeFilter(Shape shape, size_t quad = 0) {
   bool hasCystalTop = lastCrystal.has_value() && lastPart.has_value() && lastCrystal.value() == lastPart.value();
   bool hasGapUnderCrystal =
       lastCrystal.has_value() && lastCrystal.value() > 0 && shape.get(lastCrystal.value() - 1, quad) == Type::Empty;
-  // return hasGap && hasCystalTop;
-  return hasGapUnderCrystal;
+  return hasGap && hasCystalTop;
+  // return hasGapUnderCrystal;
 };
 
 void findQuarters() {
@@ -37,12 +39,19 @@ void findQuarters() {
 
   constexpr Shape::T mask = repeat<Shape::T>(3, 2 * Shape::PART, Shape::LAYER);
   Shape quarter;
-  for (Shape half : halves) {
+  for (Shape shape : halves) {
     for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {
-      quarter = half.rotate(angle) & mask;
+      quarter = shape.rotate(angle) & mask;
       quarters.insert(quarter);
     }
   }
+
+  // for (Shape shape : shapes) {
+  //   for (size_t angle = 0; angle < Shape::PART; ++angle) {
+  //     quarter = shape.rotate(angle) & mask;
+  //     quarters.insert(quarter);
+  //   }
+  // }
 
   auto toValue = [&](Shape shape) {
     size_t value = 0;
@@ -72,6 +81,7 @@ void findQuarters() {
   }
 }
 
+// Find halves that have drops on both quarters
 void findHalves() {
   std::vector<Shape> shapes0, shapes1;
   std::copy_if(halves.begin(), halves.end(), std::back_inserter(shapes0),
@@ -96,8 +106,8 @@ int main(int argc, char* argv[]) {
   }
   Shapez::init(argv[1]);
 
-  // Shapez::findQuarters();
-  Shapez::findHalves();
+  Shapez::findQuarters();
+  // Shapez::findHalves();
 
   return 0;
 }
