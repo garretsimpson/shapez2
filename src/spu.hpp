@@ -62,7 +62,7 @@ struct Spu {
       ops.push_back(op);
     };
 
-    void addShape(Shape shape) {
+    void addShape(const Shape shape) {
       addOp(Op::Input);
       input.push_back(shape);
     };

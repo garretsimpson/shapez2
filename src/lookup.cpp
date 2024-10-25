@@ -12,9 +12,7 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   ShapeSet set = ShapeSet::load(argv[1]);
-
   ska::bytell_hash_set<Shape> halves;
-  ska::bytell_hash_set<Shape> shapes;
 
   halves = {set.halves.begin(), set.halves.end()};
 

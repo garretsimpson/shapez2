@@ -13,12 +13,14 @@ struct Solver {
   constexpr static size_t PART = Shape::PART;
   constexpr static size_t LAYER = Shape::LAYER;
 
-  ShapeSet set;
   ska::bytell_hash_set<Shape> halves;
+  ska::bytell_hash_set<Shape> shapes;
 
   Solver(char* filename) {
-    set = ShapeSet::load(filename);
+    ShapeSet set = ShapeSet::load(filename);
     halves = {set.halves.begin(), set.halves.end()};
+    shapes = {set.shapes.begin(), set.shapes.end()};
+    set.clear();
   }
 
   // Whether a shape can be constructed by swapping two halves.
@@ -47,10 +49,9 @@ struct Solver {
     size_t found = 0;
     // shape = {"SSS-:----:----:----"};
 
-    num = set.shapes.size();
+    num = shapes.size();
     std::cout << "Shapes: " << num << std::endl;
-    for (size_t i = 0; i < num; ++i) {
-      shape = set.shapes[i];
+    for (Shape shape : shapes) {
       if (swappable(shape)) {
         std::cout << "Found: " << shape.toString() << std::endl;
         found++;
@@ -103,9 +104,28 @@ struct Solver {
     return shape.getLayer(0).value == pins;
   }
 
+  // Assumes shape is a simple stack and no crystals
+  bool solveStack(Spu::Solution& solution, Shape goal) {
+    // std::cout << format("Goal: {}", goal.toString());
+    if (hasCrystal(goal)) {
+      return false;
+    }
+    size_t numLayers = goal.layers();
+    if (numLayers == 0) {
+      return true;
+    }
+    solution.addOp(Spu::Op::Output);
+    while (numLayers > 1) {
+      solution.addOp(Spu::Op::Stack);
+      solution.addShape(goal.getLayer(--numLayers));
+    }
+    solution.addShape(goal.getLayer(--numLayers));
+    return true;
+  }
+
   // This solver only handles half-shapes (for now).
   // The West half is empty.
-  bool solve(Shape goal) {
+  Spu::Solution solveHalf(const Shape goal) {
     std::cout << format("Goal: {}", goal.toString());
 
     // working stack
@@ -177,18 +197,33 @@ struct Solver {
       }
     }
 
-    std::cout << std::endl << solution.toString() << std::endl;
+    return solution;
+  }
 
+  bool tryBuild(Spu::Solution solution, const Shape goal) {
+    if (solution.ops.size() == 0) {
+      return false;
+    }
+    // std::cout << std::endl << solution.toString() << std::endl;
     Spu spu;
     std::vector<Shape> output = spu.build(solution);
+    if (output.size() != 1) {
+      std::cout << "Invalid build output" << std::endl;
+      return false;
+    }
     bool pass = (output[0] == goal);
-    if (pass)
-      std::cout << " PASS";
-    else
-      std::cout << std::format(" FAIL {}", output[0].toString());
-    std::cout << std::endl;
+    // if (pass)
+    //   std::cout << " PASS";
+    // else
+    //   std::cout << std::format(" FAIL {}", output[0].toString());
+    // std::cout << std::endl;
 
     return pass;
+  }
+
+  Spu::Solution solve(Shape goal) {
+    Spu::Solution solution;
+    return solution;
   }
 
   void run() {
@@ -198,15 +233,22 @@ struct Solver {
 
     // Make list of shapes to check
     todo = {halves.begin(), halves.end()};
+    todo.insert(todo.end(), shapes.begin(), shapes.end());
     std::sort(todo.begin(), todo.end());
+    // Shape testShape{"SSSS:SSSS:SSSS:PPPP"};
+    // todo.push_back(Shape());
+    // todo.push_back(testShape);
     std::cout << std::format("todo {}", todo.size()) << std::endl;
 
-    for (Shape goalShape : todo) {
-      if (solve(goalShape)) {
+    Spu::Solution solution;
+    for (const Shape goalShape : todo) {
+      bool found = solveStack(solution, goalShape);
+      if (tryBuild(solution, goalShape)) {
         knowns.push_back(goalShape);
       } else {
         unknowns.push_back(goalShape);
       }
+      solution.clear();
     }
 
     std::cout << std::format("knowns {}, unknowns: {}", knowns.size(), unknowns.size()) << std::endl;
@@ -235,12 +277,12 @@ void testSpu() {
   std::cout << solution.toString() << std::endl;
 }
 
-void test() {
-  using T = Shape::T;
-  T value = repeat<T>(T(Type::Shape), 2, Shape::PART);
-  Shape shape(value);
-  shape = shape.destroyHalf();
-  std::cout << shape.toString() << std::endl;
+void test(Solver solver) {
+  Shape testShape{"SSSS:SSSS:SSSS:PPPP"};
+  Spu::Solution solution;
+  bool result = solver.solveStack(solution, testShape);
+  std::cout << solution.toString() << std::endl;
+  result = solver.tryBuild(solution, testShape);
 }
 
 }  // namespace Shapez
@@ -253,7 +295,7 @@ int main(int argc, char* argv[]) {
   char* filename = argv[1];
 
   Shapez::Solver solver(filename);
-  // Shapez::test();
+  // Shapez::test(solver);
   solver.run();
 
   std::cout << "DONE" << std::endl;
