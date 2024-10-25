@@ -814,3 +814,13 @@ Pc--:P---:----:----
 Sc--:P---:----:----
 DONE
 
+CROS solver...
+- Always stacks
+- Crystlizes entire shape if there are any crystals on the current layer
+todo 2010605
+knowns 177523, unknowns: 1833082
+
+Method       Keys  Percent
+Stack     144,607    7.19%
+CROS      177,523    8.83%
+TMAM    2,010,604  100.00%
