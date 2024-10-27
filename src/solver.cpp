@@ -13,60 +13,56 @@ struct Solver {
   constexpr static size_t PART = Shape::PART;
   constexpr static size_t LAYER = Shape::LAYER;
 
-  ska::bytell_hash_set<Shape> halves;
-  ska::bytell_hash_set<Shape> shapes;
+  ska::bytell_hash_set<Shape> allShapes;
 
   // working stack
   std::vector<Shape> stack;
 
   Solver(char* filename) {
     ShapeSet set = ShapeSet::load(filename);
-    halves = {set.halves.begin(), set.halves.end()};
-    shapes = {set.shapes.begin(), set.shapes.end()};
+    findAllShapes(set);
     set.clear();
   }
 
+  void testFlip() {
+    Shape shape("PS--:----:----:----");
+    std::cout << shape.toString() << std::endl;
+    shape = shape.flip();
+    shape = shape.rotate(2);
+    std::cout << shape.toString() << std::endl;
+  }
+
+  void findAllShapes(ShapeSet& set) {
+    std::cout << "Find all shapes..." << std::endl;
+    std::vector<Shape> shapes;
+    for (Shape shape : set.halves) {
+      if (shape.value == 0) continue;
+      shapes = shape.equivalentShapes();
+      allShapes.insert(shapes.begin(), shapes.end());
+    }
+    std::cout << allShapes.size() << std::endl;
+    for (Shape shape1 : set.halves) {
+      for (Shape shape2 : set.halves) {
+        if (shape1.value == 0 || shape2.value == 0) continue;
+        shapes = (shape1 | shape2.rotate(2)).equivalentShapes();
+        // std::cout << "rotate" << std::endl;
+        // displayShapes(shapes);
+        allShapes.insert(shapes.begin(), shapes.end());
+        shapes = (shape1 | shape2.flip()).equivalentShapes();
+        // std::cout << "flip" << std::endl;
+        // displayShapes(shapes);
+        allShapes.insert(shapes.begin(), shapes.end());
+      }
+      std::cout << allShapes.size() << std::endl;
+    }
+    for (Shape shape : set.shapes) {
+      shapes = shape.equivalentShapes();
+      allShapes.insert(shapes.begin(), shapes.end());
+    }
+    std::cout << std::format("Found {} shapes...", allShapes.size()) << std::endl;
+  }
+
   void clear() { stack.clear(); }
-
-  // Whether a shape can be constructed by swapping two halves.
-  bool swappable(Shape shape) const {
-    constexpr T mask = repeat<T>(repeat<T>(3, 2, PART / 2), 2 * PART, LAYER);
-    for (size_t angle = 0; angle < PART / 2; ++angle) {
-      Shape left{shape.rotate(angle).value & mask};
-      Shape right{shape.rotate(angle + PART / 2).value & mask};
-      // std::cout << left.toString() << std::endl;
-      // std::cout << right.toString() << std::endl;
-      // TODO: Use shape.collapse()
-      left = left.equivalentHalves()[0];
-      right = right.equivalentHalves()[0];
-      if (left.value == 0 || right.value == 0) return true;
-      if (halves.find(left) != halves.end() && halves.find(right) != halves.end()) {
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  void verifyShapes() {
-    size_t num;
-    Shape shape;
-    size_t found = 0;
-    // shape = {"SSS-:----:----:----"};
-
-    num = shapes.size();
-    std::cout << "Shapes: " << num << std::endl;
-    for (Shape shape : shapes) {
-      if (swappable(shape)) {
-        std::cout << "Found: " << shape.toString() << std::endl;
-        found++;
-      }
-    }
-    if (found == 0)
-      std::cout << "None found" << std::endl;
-    else
-      std::cout << "Found: " << found << std::endl;
-  }
 
   void displayShapes(std::vector<Shape> shapes, size_t maxSize = 10) {
     size_t size = std::min(shapes.size(), maxSize);
@@ -278,21 +274,12 @@ struct Solver {
   }
 
   void run() {
-    std::vector<Shape> todo;
+    std::cout << "Solving shapes..." << std::endl;
+
     std::vector<Shape> knowns;
     std::vector<Shape> unknowns;
-
-    // Make list of shapes to check
-    todo = {halves.begin(), halves.end()};
-    todo.insert(todo.end(), shapes.begin(), shapes.end());
-    std::sort(todo.begin(), todo.end());
-    // Shape testShape{"SSSS:SSSS:SSSS:PPPP"};
-    // todo.push_back(Shape());
-    // todo.push_back(testShape);
-    std::cout << std::format("todo {}", todo.size()) << std::endl;
-
     Spu::Solution solution;
-    for (const Shape goalShape : todo) {
+    for (const Shape goalShape : allShapes) {
       solution.addOp(Spu::Op::Output);
       stack.push_back(goalShape);
       if (solveCROS(solution) && tryBuild(solution, goalShape)) {
@@ -304,15 +291,13 @@ struct Solver {
       stack.clear();
     }
 
-    std::cout << std::format("todo {}, knowns {}, unknowns: {}", todo.size(), knowns.size(), unknowns.size())
+    std::cout << std::format("all {}, knowns {}, unknowns {}", allShapes.size(), knowns.size(), unknowns.size())
               << std::endl;
-    size_t numTodo = countShapes(todo);
-    size_t numKnowns = countShapes(knowns);
-    size_t numUnknowns = countShapes(unknowns);
-    std::cout << std::format("todo {}, knowns {}, unknowns: {}", numTodo, numKnowns, numUnknowns) << std::endl;
     std::cout << "Knowns" << std::endl;
+    std::sort(knowns.begin(), knowns.end());
     displayShapes(knowns);
     std::cout << "Unknowns" << std::endl;
+    std::sort(unknowns.begin(), unknowns.end());
     displayShapes(unknowns);
   }
 };

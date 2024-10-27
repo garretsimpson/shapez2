@@ -15,6 +15,46 @@ void init(const char* filename) {
   set.clear();
 }
 
+// Whether a shape can be constructed by swapping two halves.
+bool swappable(Shape shape) {
+  constexpr Shape::T mask = repeat<Shape::T>(repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
+  for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {
+    Shape left{shape.rotate(angle).value & mask};
+    Shape right{shape.rotate(angle + Shape::PART / 2).value & mask};
+    // std::cout << left.toString() << std::endl;
+    // std::cout << right.toString() << std::endl;
+    // TODO: Use shape.collapse()
+    left = left.equivalentHalves()[0];
+    right = right.equivalentHalves()[0];
+    if (left.value == 0 || right.value == 0) return true;
+    if (halves.find(left) != halves.end() && halves.find(right) != halves.end()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+void verifyShapes() {
+  size_t num;
+  Shape shape;
+  size_t found = 0;
+  // shape = {"SSS-:----:----:----"};
+
+  num = shapes.size();
+  std::cout << "Shapes: " << num << std::endl;
+  for (Shape shape : shapes) {
+    if (swappable(shape)) {
+      std::cout << "Found: " << shape.toString() << std::endl;
+      found++;
+    }
+  }
+  if (found == 0)
+    std::cout << "None found" << std::endl;
+  else
+    std::cout << "Found: " << found << std::endl;
+}
+
 bool shapeFilter(Shape shape, size_t quad = 0) {
   std::optional<size_t> firstGap;
   std::optional<size_t> lastCrystal;

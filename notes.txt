@@ -824,3 +824,25 @@ Method       Keys  Percent
 Stack     144,607    7.19%
 CROS      177,523    8.83%
 TMAM    2,010,604  100.00%
+
+Idea
+- Make a list of all possible shapes.
+- all variant of halves, full shapes, and combos of halves.
+- half combos need to made two ways: A | B and A | mirror B
+- Add them to a set to remove duplicates, or don't add symmetrical shapes.
+- Move code to analyze.
+- Use the null shape to make all half combos.
+- Store all shapes in a file that can be quickly read by the solver.
+- Create other test shape files: all, halves with gaps, full complex, etc.
+
+Solving shapes...
+all 349728288, knowns 6864344, unknowns 342863944
+
+CROS solver 1.96%
+
+Idea
+- Seacher and solver are slow and could be much faster.
+- Need to parallelize the the searcher and the solver.
+- Convert to map/reduce.
+- Perhaps use OpenCL to farm ops to GPU.
+
