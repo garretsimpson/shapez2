@@ -9,10 +9,13 @@ ska::bytell_hash_set<Shape> halves;
 ska::bytell_hash_set<Shape> shapes;
 
 void init(const char* filename) {
+  std::cout << "Loading file: " << filename << std::endl;
   ShapeSet set = ShapeSet::load(filename);
   halves = {set.halves.begin(), set.halves.end()};
   shapes = {set.shapes.begin(), set.shapes.end()};
   set.clear();
+  std::cout << std::format("halves {}, fulls {}, total {}", halves.size(), shapes.size(), halves.size() + shapes.size())
+            << std::endl;
 }
 
 // Whether a shape can be constructed by swapping two halves.
@@ -55,7 +58,14 @@ void verifyShapes() {
     std::cout << "Found: " << found << std::endl;
 }
 
-bool shapeFilter(Shape shape, size_t quad = 0) {
+bool hasDrop(Shape shape, size_t quad = 0) {
+  for (size_t layer = 1; layer < Shape::LAYER; ++layer) {
+    if (shape.get(layer - 1, quad) == Type::Empty && shape.get(layer, quad) == Type::Crystal) return true;
+  }
+  return false;
+};
+
+bool hasGapUnderCrystalTop(Shape shape, size_t quad = 0) {
   std::optional<size_t> firstGap;
   std::optional<size_t> lastCrystal;
   std::optional<size_t> lastPart;
@@ -68,10 +78,7 @@ bool shapeFilter(Shape shape, size_t quad = 0) {
   }
   bool hasGap = firstGap.has_value() && lastPart.has_value() && firstGap.value() < lastPart.value();
   bool hasCystalTop = lastCrystal.has_value() && lastPart.has_value() && lastCrystal.value() == lastPart.value();
-  bool hasGapUnderCrystal =
-      lastCrystal.has_value() && lastCrystal.value() > 0 && shape.get(lastCrystal.value() - 1, quad) == Type::Empty;
   return hasGap && hasCystalTop;
-  // return hasGapUnderCrystal;
 };
 
 void findQuarters() {
@@ -85,13 +92,6 @@ void findQuarters() {
       quarters.insert(quarter);
     }
   }
-
-  // for (Shape shape : shapes) {
-  //   for (size_t angle = 0; angle < Shape::PART; ++angle) {
-  //     quarter = shape.rotate(angle) & mask;
-  //     quarters.insert(quarter);
-  //   }
-  // }
 
   auto toValue = [&](Shape shape) {
     size_t value = 0;
@@ -109,14 +109,29 @@ void findQuarters() {
     return code;
   };
 
-  std::vector<Shape> shapes;
-  std::copy_if(quarters.begin(), quarters.end(), std::back_inserter(shapes),
-               [&](Shape shape) { return shapeFilter(shape); });
-  std::sort(shapes.begin(), shapes.end());
+  std::vector<Shape> gapShapes;
+  std::vector<Shape> dropShapes;
+  // std::copy_if(quarters.begin(), quarters.end(), std::back_inserter(shapes),
+  //              [&](Shape shape) { return hasGapUnderCrystalTop(shape); });
+
+  for (auto shape : quarters) {
+    if (!hasGapUnderCrystalTop(shape)) continue;
+    if (!hasDrop(shape))
+      gapShapes.insert(gapShapes.end(), shape);
+    else
+      dropShapes.insert(dropShapes.end(), shape);
+  }
+
+  std::sort(gapShapes.begin(), gapShapes.end());
+  std::sort(dropShapes.begin(), dropShapes.end());
 
   std::cout << "Quarters: " << quarters.size() << std::endl;
-  std::cout << "Found: " << shapes.size() << std::endl;
-  for (Shape shape : shapes) {
+  std::cout << "Gap Shapes: " << gapShapes.size() << std::endl;
+  for (Shape shape : gapShapes) {
+    std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
+  }
+  std::cout << "Drop Shapes: " << dropShapes.size() << std::endl;
+  for (Shape shape : dropShapes) {
     std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
   }
 }
@@ -125,15 +140,31 @@ void findQuarters() {
 void findHalves() {
   std::vector<Shape> shapes0, shapes1;
   std::copy_if(halves.begin(), halves.end(), std::back_inserter(shapes0),
-               [&](Shape shape) { return shapeFilter(shape, 0); });
+               [&](Shape shape) { return hasDrop(shape, 0); });
   std::copy_if(shapes0.begin(), shapes0.end(), std::back_inserter(shapes1),
-               [&](Shape shape) { return shapeFilter(shape, 1); });
+               [&](Shape shape) { return hasDrop(shape, 1); });
   std::sort(shapes1.begin(), shapes1.end());
 
   std::cout << "Halves: " << halves.size() << std::endl;
   std::cout << "Found: " << shapes1.size() << std::endl;
   for (auto shape : shapes1) {
     std::cout << shape.toString() << std::endl;
+  }
+}
+
+void countShapes() {
+  ska::bytell_hash_map<size_t, size_t> distro;
+
+  const size_t MAX_COST = 2 * Shape::LAYER * Shape::PART;
+  for (auto i = 0; i <= MAX_COST; ++i) distro[i] = 0;
+
+  for (Shape shape : shapes) {
+    size_t cost = shape.bitCount();
+    distro[cost]++;
+  }
+
+  for (auto i = 0; i <= MAX_COST; ++i) {
+    std::cout << std::format("{} {}", i, distro[i]) << std::endl;
   }
 }
 
@@ -146,8 +177,9 @@ int main(int argc, char* argv[]) {
   }
   Shapez::init(argv[1]);
 
-  Shapez::findQuarters();
+  // Shapez::findQuarters();
   // Shapez::findHalves();
+  Shapez::countShapes();
 
   return 0;
 }
