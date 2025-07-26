@@ -73,6 +73,16 @@
       "cwd": "c:\\Users\\garre\\Projects\\shapez2",
       "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\search5.exe",
       "binaryArgs": []
+    },
+    {
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\analyze5.exe",
+      "binaryArgs": ["dump5"]
+    },
+    {
+      "cwd": "c:\\Users\\garre\\Projects\\shapez2\\bin",
+      "binaryPath": "c:\\Users\\garre\\Projects\\shapez2\\bin\\analyze5.exe",
+      "binaryArgs": []
     }
   ]
 }
