@@ -23,6 +23,7 @@ struct Solve {
     solnSet.clear();
   }
 
+  // TODO: return the halves that match the shape.
   std::optional<std::pair<Shape, Shape>> findSwap(Shape shape) {
     constexpr Shape::T mask = repeat<Shape::T>(repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
     for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {

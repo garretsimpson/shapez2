@@ -135,6 +135,7 @@ struct Solver {
   // - construct a 1-layer of solids and pins
   // - stack it on the existing shape
   // - optionally crystalize the whole shape
+  // TODO: pins
   bool solveCROS(Spu::Solution& solution) {
     Shape goalShape = stack.back();
     stack.pop_back();
