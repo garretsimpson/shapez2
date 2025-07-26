@@ -26,7 +26,7 @@ bool swappable(Shape shape) {
     Shape right{shape.rotate(angle + Shape::PART / 2).value & mask};
     // std::cout << left.toString() << std::endl;
     // std::cout << right.toString() << std::endl;
-    // TODO: Use shape.collapse()
+    // TODO: Use shape.collapse() instead of looking in the halves list
     left = left.equivalentHalves()[0];
     right = right.equivalentHalves()[0];
     if (left.value == 0 || right.value == 0) return true;
@@ -87,13 +87,13 @@ void findQuarters() {
   constexpr Shape::T mask = repeat<Shape::T>(3, 2 * Shape::PART, Shape::LAYER);
   Shape quarter;
   for (Shape shape : halves) {
-    for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {
+    for (size_t angle = 0; angle < Shape::PART; ++angle) {
       quarter = shape.rotate(angle) & mask;
       quarters.insert(quarter);
     }
   }
 
-  auto toValue = [&](Shape shape) {
+  auto toValue = [](Shape shape) {
     size_t value = 0;
     for (size_t layer = 0; layer < Shape::LAYER; ++layer) {
       value += size_t(shape.get(layer, 0)) << (2 * layer);
@@ -101,7 +101,7 @@ void findQuarters() {
     return value;
   };
 
-  auto toCode = [&](Shape shape) {
+  auto toCode = [](Shape shape) {
     std::string code = "";
     for (size_t layer = 0; layer < Shape::LAYER; ++layer) {
       code += toChar(shape.get(layer, 0));
@@ -109,31 +109,182 @@ void findQuarters() {
     return code;
   };
 
-  std::vector<Shape> gapShapes;
-  std::vector<Shape> dropShapes;
-  // std::copy_if(quarters.begin(), quarters.end(), std::back_inserter(shapes),
-  //              [&](Shape shape) { return hasGapUnderCrystalTop(shape); });
+  auto toShape = [](size_t value) {
+    Shape::T corner = 0;
+    for (size_t layer = 0; layer < Shape::LAYER; ++layer) {
+      corner += (value & 3) << (2 * layer * Shape::PART);
+      value >>= 2;
+    }
+    return Shape(corner);
+  };
 
-  for (auto shape : quarters) {
-    if (!hasGapUnderCrystalTop(shape)) continue;
-    if (!hasDrop(shape))
-      gapShapes.insert(gapShapes.end(), shape);
+  auto pinOverGap1 = [](Shape shape) {
+    std::optional<size_t> firstGap;
+    std::optional<size_t> lastPin;
+    Type type;
+    for (size_t layer = 0; layer < Shape::LAYER; ++layer) {
+      type = shape.get(layer, 0);
+      if (!firstGap.has_value() && type == Type::Empty) firstGap = layer;
+      if (type == Type::Pin) lastPin = layer;
+    }
+    bool found = firstGap.has_value() && lastPin.has_value() && (firstGap.value() == lastPin.value() - 1);
+    return found;
+  };
+
+  // Pin over gap
+  auto pinOverGap2 = [](size_t value) {
+    // xPGx
+    const size_t POG = (size_t(Type::Pin) << 2) + size_t(Type::Empty);
+    const size_t MASK = 0xf;
+    for (size_t layer = 0; layer < Shape::LAYER - 1; ++layer) {
+      if ((MASK & value) == POG) return true;
+      value >>= 2;
+    }
+    return false;
+  };
+
+  // Crystal with no base - unsupported
+  auto UnCrystal = [](size_t value) {
+    // xCG<not solid>
+    const size_t UNC2 = size_t(Type::Crystal) << 2 + size_t(Type::Empty);
+    const size_t MASK2 = 0xf;
+    if ((MASK2 & value) == UNC2) return true;
+
+    const size_t UNC3 = UNC2 << 2;
+    const size_t MASK3 = 0x3f;
+    if ((MASK3 & value) == (UNC3 + size_t(Type::Empty))) return true;
+    if ((MASK3 & value) == (UNC3 + size_t(Type::Pin))) return true;
+    if ((MASK3 & value) == (UNC3 + size_t(Type::Crystal))) return true;
+
+    const size_t UNC4 = UNC3 << 2;
+    const size_t MASK4 = 0xff;
+    if ((MASK4 & value) == (UNC4 + size_t(Type::Empty))) return true;
+    if ((MASK4 & value) == (UNC4 + size_t(Type::Pin))) return true;
+    if ((MASK4 & value) == (UNC4 + size_t(Type::Crystal))) return true;
+
+    const size_t MASK42 = 0xfc;
+    // TODO: This could be an extension of UNC3.
+    if ((MASK42 & value) == (UNC4 + (size_t(Type::Pin) << 2))) return true;
+    if ((MASK42 & value) == (UNC4 + (size_t(Type::Crystal) << 2))) return true;
+
+    const size_t UNC5 = UNC4 << 2;
+    const size_t MASK5 = 0x3ff;
+    if ((MASK5 & value) == (UNC5 + size_t(Type::Empty))) return true;
+    if ((MASK5 & value) == (UNC5 + size_t(Type::Pin))) return true;
+    if ((MASK5 & value) == (UNC5 + size_t(Type::Crystal))) return true;
+
+    return false;
+  };
+
+  // Crystal over pins
+  auto CryOnPins = [](size_t value) {
+    // xCPx<not pin>
+    const size_t COP3 = (size_t(Type::Crystal) << 4) + (size_t(Type::Pin) << 2);
+    const size_t MASK3 = 0x3f;
+    if ((MASK3 & value) == (COP3 + size_t(Type::Shape))) return true;
+    if ((MASK3 & value) == (COP3 + size_t(Type::Crystal))) return true;
+
+    const size_t COP4 = COP3 << 2;
+    const size_t MASK4 = 0xff;
+    if ((MASK4 & value) == (COP4 + (size_t(Type::Pin) << 2) + size_t(Type::Shape))) return true;
+    if ((MASK4 & value) == (COP4 + (size_t(Type::Pin) << 2) + size_t(Type::Crystal))) return true;
+
+    const size_t MASK42 = 0xfc;
+    if ((MASK42 & value) == (COP4 + (size_t(Type::Shape) << 2))) return true;
+    if ((MASK42 & value) == (COP4 + (size_t(Type::Crystal) << 2))) return true;
+
+    // xCxP<not pin>
+    const size_t IMP1 =
+        (size_t(Type::Crystal) << 6) + (size_t(Type::Shape) << 4) + (size_t(Type::Pin) << 2) + size_t(Type::Shape);
+    const size_t IMP2 =
+        (size_t(Type::Crystal) << 6) + (size_t(Type::Shape) << 4) + (size_t(Type::Pin) << 2) + size_t(Type::Crystal);
+    if ((MASK4 & value) == IMP1) return true;
+    if ((MASK4 & value) == IMP2) return true;
+
+    return false;
+  };
+
+  // Impossible drop/break with crystal on bottom
+  auto ImpDrop = [](size_t value) {
+    // CGSCx
+    // CSGCx
+    // CxSxC maybe?
+    const size_t IMP1 =
+        (size_t(Type::Crystal) << 6) + (size_t(Type::Empty) << 4) + (size_t(Type::Shape) << 2) + size_t(Type::Crystal);
+    const size_t IMP2 =
+        (size_t(Type::Crystal) << 6) + (size_t(Type::Shape) << 4) + (size_t(Type::Empty) << 2) + size_t(Type::Crystal);
+    const size_t MASK4 = 0xff;
+    if ((MASK4 & value) == IMP1) return true;
+    if ((MASK4 & value) == IMP2) return true;
+    return false;
+  };
+
+  auto possStr = [](bool poss) {
+    if (poss == true)
+      return "pos";
     else
-      dropShapes.insert(dropShapes.end(), shape);
-  }
+      return "imp";
+  };
 
-  std::sort(gapShapes.begin(), gapShapes.end());
-  std::sort(dropShapes.begin(), dropShapes.end());
+  CryOnPins(54);
 
-  std::cout << "Quarters: " << quarters.size() << std::endl;
-  std::cout << "Gap Shapes: " << gapShapes.size() << std::endl;
-  for (Shape shape : gapShapes) {
-    std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
+  const std::string BAD = "BAD";
+  const std::string MISS = "MISS";
+  size_t total = std::pow(4, Shape::LAYER);
+  std::cout << "Total quarters: " << total << std::endl;
+  size_t bad = 0;
+  size_t miss = 0;
+  for (size_t i = 0; i < total; ++i) {
+    Shape shape = toShape(i);
+    bool possible = quarters.find(shape) != quarters.end();
+    bool test1 = pinOverGap2(i);
+    bool test2 = UnCrystal(i);
+    bool test3 = CryOnPins(i);
+    bool test4 = ImpDrop(i);
+    bool test = test1 || test2 || test3 || test4;
+    std::string result = "";
+    if (possible && test) {
+      result = BAD;
+      bad++;
+    }
+    if (!possible && !test) {
+      result = MISS;
+      miss++;
+    }
+    std::cout << std::format("{:4}  {:3}  {:5}", i, possStr(possible), toCode(shape), result) << std::endl;
+    // std::cout << std::format("{:4}  {:3}  {:5}  {:5}  {:5}  {:5}  {:5}  {:4}", i, possStr(possible), toCode(shape),
+    //                          test1, test2, test3, test4, result)
+    //           << std::endl;
   }
-  std::cout << "Drop Shapes: " << dropShapes.size() << std::endl;
-  for (Shape shape : dropShapes) {
-    std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
-  }
+  // std::cout << std::format("BAD: {}  MISS: {}", bad, miss) << std::endl;
+
+  /*
+    std::vector<Shape> gapShapes;
+    std::vector<Shape> dropShapes;
+    // std::copy_if(quarters.begin(), quarters.end(), std::back_inserter(shapes),
+    //              [&](Shape shape) { return hasGapUnderCrystalTop(shape); });
+
+    for (auto shape : quarters) {
+      if (!hasGapUnderCrystalTop(shape)) continue;
+      if (!hasDrop(shape))
+        gapShapes.insert(gapShapes.end(), shape);
+      else
+        dropShapes.insert(dropShapes.end(), shape);
+    }
+
+    std::sort(gapShapes.begin(), gapShapes.end());
+    std::sort(dropShapes.begin(), dropShapes.end());
+
+    std::cout << "Quarters: " << quarters.size() << std::endl;
+    std::cout << "Gap Shapes: " << gapShapes.size() << std::endl;
+    for (Shape shape : gapShapes) {
+      std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
+    }
+    std::cout << "Drop Shapes: " << dropShapes.size() << std::endl;
+    for (Shape shape : dropShapes) {
+      std::cout << std::format("{:4}  {}", toValue(shape), toCode(shape)) << std::endl;
+    }
+  */
 }
 
 // Find halves that have drops on both quarters
@@ -177,9 +328,9 @@ int main(int argc, char* argv[]) {
   }
   Shapez::init(argv[1]);
 
-  // Shapez::findQuarters();
+  Shapez::findQuarters();
   // Shapez::findHalves();
-  Shapez::countShapes();
+  // Shapez::countShapes();
 
   return 0;
 }
