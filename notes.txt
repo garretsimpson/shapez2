@@ -11,7 +11,7 @@ LAYER = 2
 
 Found 14 quarters
 Pre-calculated 97 halves
-# shapes: 35281
+# shapes: 35,281
 # halves: 97
 # shapes whose halves aren't stable: 45
 # quarters: 14
@@ -20,7 +20,7 @@ LAYER = 3
 
 Found 46 quarters
 Pre-calculated 905 halves
-# shapes: 3865768
+# shapes: 3,865,768
 # halves: 917
 # shapes whose halves aren't stable: 11627
 # quarters: 47
@@ -53,6 +53,13 @@ Sorting shapes...
 Saving dump5 ...
 Saving dump5_soln ...
 DONE
+
+Number of possible shapes (ignoring colors and shape types) by max number of layers
+1             255
+2          35,281
+3       3,865,768
+4     349,728,289
+5  26,929,624,298
 
 Ideas
 - Create a program to display the first 10 shapes in the shapes list.  DONE
@@ -934,3 +941,234 @@ Distribution of full shapes for Insane
 39 0
 40 0
 
+Quarters in half shapes
+Quarters: 476
+Gap Shapes: 24
+Drop Shapes: 24
+
+Quarters in full shapes
+Quarters: 474
+Gap Shapes: 24
+Drop Shapes: 22
+
+      gap  drop  total
+half   24    24    476
+full   24    22    474
+
+Pin push solutions
+
+CrCrP-Cb:P-CbCgP-:Cg--P---:----CcCc
+SSPS:PSSP:S-P-:--SS
+SS-S, -S--, P-PP:S-SS, --P-:--S-  // does not work because layer 3 is connected
+SS-S, P-P-:S-S-, -S--, --PP:--SS
+
+Examine each layer starting at the bottom...
+If it is all solid shapes, eject it as a part.
+If it is combo parts and pins, move the pins up.
+- Make sure to keep solid parts above the pins connected.
+If it is all pins or gaps, check the layer above.  For each sector:
+- solid over gap: move solid up one layer.
+- gap over pin: move pin up two layers.
+- solid over pin: eject as a part.
+If it is empty, done.
+
+- - - -   - - O O
+- - - -   - - I I
+- - O O   - O - -
+O - I -   O - O -
+I O O I   I - I -
+O O I O   O O - O
+
+- - O O
+- - I I
+O - O -
+I - I -
+- O - O
+O O - -
+
+Input: PSPP:S-SS:P-SS:S--S:ScSP
+PSPP:S-SS:P-SS:S--S:ScSP <- ST(PSPP:S-SS:P-SS:S--S:ScS-, ---P:----:----:----:----) 17
+  PSPP:S-SS:P-SS:S--S:ScS- <- ST(PSPP:S-SS:P-SS:S---:ScS-, ---S:----:----:----:----) 16
+    PSPP:S-SS:P-SS:S---:ScS- <- ST(PSPP:S-SS:P-S-:S---:ScS-, ---S:----:----:----:----) 15
+      PSPP:S-SS:P-S-:S---:ScS- <- ST(PSPP:S-S-:P-S-:S---:ScS-, ---S:----:----:----:----) 14
+        PSPP:S-S-:P-S-:S---:ScS- <- PP(cS-S:ccSP:cS-S:cScS:c---) 22
+          cS-S:ccSP:cS-S:cScS:c--- <- SW(S---:cS--:S---:Sc--:----, -Sc-:-Pc-:-Sc-:-Sc-:--c-) 22
+            -S--:Sc--:-S--:cS--:---- <>
+            cS--:cP--:cS--:cS--:c--- <>
+        S---:----:----:----:---- <>
+      S---:----:----:----:---- <>
+    S---:----:----:----:---- <>
+  P---:----:----:----:---- <>
+
+cwSw--Sw:cwcwCrP-:cwWr--Wr:cwSwcySw:cw------
+
+Rr--Rr--:cy--cy--:cyRwcyRw:--Cm--Cm:--cb--cb
+
+S-S-:c-c-:cScS:-S-S:-c-C
+
+Input: S-S-:c-c-:cScS:-S-S:-c-S
+-S-S:-c-c:ScSc:S-S-:c-S- <- SW(-S--:-c--:Sc--:S---:c---, ---S:---c:--Sc:--S-:--S-) 17
+  -S--:-c--:Sc--:S---:c--- <>
+  -S--:-c--:Sc--:S---:S--- <>
+
+Pin Push MAM test shapes
+{CrCrP-Cb:P-CbCgP-:Cg--P---:----CcCc}
+{CrP-CrP-:P---P-P-:Cg--Cg--:P---P---:--CbCb--}
+
+     O
+     I
+ O   O
+ I  _I_
+_O_  O
+ I   I
+ O   O
+ I   I
+_O_ _O_
+
+Max two deleted hats.  So two bald pins max.
+
+CrCrP-Cr:P-CmCg--:Cg--P---:Cb--CcCb:P-----Cm
+
+CrCrP-Cb:P-CbCgP-:Cg--P---:----CcCc
+
+--OO
+O-I-
+IOOI
+OOIO
+
+{CrCrCrP-:P-P-P-P-:CgCgP---:P-P-CcCc} no bowties needed (3rd layer was {CbCbCbCb}, cyan was 4th)
+
+Crazy looking shape from Mari
+PPPP:P-SS:SS--:-P--:-ScS
+
+Input: PPPP:P-SS:SS--:-P--:-ScS
+PPPP:-SSP:S--S:P---:ScS- <- PP(PScc:SccS:ccSP:cScS:c---) 26
+  PScc:SccS:ccSP:cScS:c--- <- SW(PS--:Sc--:cc--:cS--:c---, --cc:--cS:--SP:--cS:----) 26
+    PS--:Sc--:cc--:cS--:c--- <>
+    cc--:cS--:SP--:cS--:---- <>
+
+That's just one pin break. which drops one part 2 layers.
+One of the half shapes has pin under solid under crystal PSccc
+I suppose that could be made with just swapping since there's no gap.
+
+Ideas
+- Implement a half shape solver, including gaps under crystals.
+- The whole shape solver would call the half shape solver.
+- Fix the solver output so that the parts are correct (not key shapes).
+
+-----
+
+from: mari
+
+drop shapes 
+
+{RgRgRgRg:cr----cr:cbcbcbcb}
+{cr----cr:RgRgRgRg:cb----cb:cwcwcwcw}
+{RgRgRgRg:cr----cr:cb----cb:cwcwcwcw}
+{RgRgRgRg:RgRgRgRg:cb----cb:cwcwcwcw}
+{crP-P-cr:RgRgRgRg:cb----cb:cwcwcwcw}
+{cr----cr:cb----cb:RgRgRgRg:cw----cw:cccccccc}
+{cr----cr:RgRgRgRg:cb----cb:cw----cw:cccccccc}
+{RgRgRgRg:cr----cr:cb----cb:cw----cw:cccccccc}
+{cr----cr:RgRgRgRg:RgRgRgRg:cw----cw:cccccccc}
+{RgRgRgRg:RgRgRgRg:cb----cb:cw----cw:cccccccc}
+{RgRgRgRg:RgRgRgRg:RgRgRgRg:cw----cw:cccccccc}
+{crP-P-cr:RgRgRgRg:RgRgRgRg:cw----cw:cccccccc}
+{crP-P-cr:cb----cb:RgRgRgRg:cw----cw:cccccccc}
+{RgRgRgRg:cb----cb:RgRgRgRg:cw----cw:cccccccc}
+{crP-P-cr:RgRgRgRg:cb----cb:cw----cw:cccccccc}
+{crP-P-cr:cbP-P-cb:RgRgRgRg:cw----cw:cccccccc}
+{crcrcrcr:RgRgRgRg:cw----cw:RgRgRgRg:cccccccc}
+{crcrcrcr:RgRgRgRg:RgRgRgRg:cw----cw:cccccccc}
+
+some more shapes for cmam testing
+
+{cwcwcwcw:cwCrcbCg:cwcwcwcw:cgCbcwCc:cccycccy}
+{RmRmRmRm:cr----cr:SwSwSwSw:cccccccc:P-P-P-P-}
+{Cbcc--Rr:cw--Srcy:cw--cycr:cbWbcrcy}
+{P-P-----:ccP-----:cwP-----:RuRuRuRu:--cw--cw}
+{P---P-P-:crCy--P-:P-cgCccb:P-P-cwP-}
+{P-cgWbP-:CmCm----:cwcrRg--:cwcyP-Rb:--cb----}
+{P-Rgcc--:cbRbCyWm:Sw--cg--:cc--cr--:cycmcbcw}
+{WrcrWrcr:--Rb--Rb:cgSgcgSg:cw--cw--:cccccccc}
+{P-SrP-Sr:P---P---:CgcbCgcb:--P---P-:cmWycmWy}
+{P-P-P-P-:P---P-Sb:cgSgcg--:cw--cwcw:cccccc--}
+{SwP-P-Sw:SrWwWwSr:cw----cw:crcrcrcr:P-cwcwP-}
+{P-RuP-Ru:P---P---:RuccRucc:--P---P-:ccRuccRu}
+{CwP-P-Cw:--WgWg--:cgRwRwcg:cg----cg:cgcwcwcg}
+{--cwP-Cw:CwWyWy--:cyRwRwcy:cw----cw:cycwcwcy}
+{SwRcP-Sw:--Swcc--:crccSwWc:--P-cr--:CcCrcccr}
+
+-----
+
+Finding all possible corners with regular expressions
+
+These are positive rules...
+
+ P+-*$
+ [PS-][S-]+((SP)|(Sc))?$
+ [PS]?c*[PS]*-*S+[PS]*((-*)|(-S))$
+ P*[Sc]+[PS]*((-*)|(-S))$
+ ((P*-*)|(S-))S+-*c+[PS]*((-*)|(-S))$
+ cSS-c
+ cS-Sc
+ S-cSc
+ -ScSc
+
+The (-S) parts are hacks.  And I gave up on the last four with two crystals.
+
+# egrep -v -f pos1 allq.txt | grep pos
+# egrep -f pos1 allq.txt | grep imp
+
+Might be better to have a combo of positive and negative rules.
+Like all pins over gaps are impossible.
+And all gaps between crystals are impossible, except for those two above.
+
+The logic needs to keep track of pins to bottom and gaps before and after crystals.
+Maybe split them into 2 and 3 part explicit possibles / impossibles.  Like S-c and -Sc.
+Or I might be able to find some numerical formula or pattern.
+
+Negative rules...
+-P
+c-.*c
+c.-+c
+^P*-+c
+[^P]P.*c
+
+^[^S]+c
+
+ROS finder
+
+Base shapes...
+S-S-:----:----:----
+-S-S:----:----:----
+SS--:----:----:----
+S--S:----:----:----
+--SS:----:----:----
+-SS-:----:----:----
+SSS-:----:----:----
+SS-S:----:----:----
+S-SS:----:----:----
+-SSS:----:----:----
+SSSS:----:----:----
+Pin shapes...
+P-P-:S-S-:----:----
+-P-P:-S-S:----:----
+PP--:SS--:----:----
+P--P:S--S:----:----
+--PP:--SS:----:----
+-PP-:-SS-:----:----
+PPP-:SSS-:----:----
+PP-P:SS-S:----:----
+P-PP:S-SS:----:----
+-PPP:-SSS:----:----
+PPPP:SSSS:----:----
+
+4 layer ROS0:   131,095
+5 layer ROS0: 1,901,153
+4 layer ROS1:   226,410
+5 layer ROS1: 4,184,360
+
+5-layer
+ROS0  251471   56641  1901153  2.98
+ROS1       0  132660  4184360  3.17
