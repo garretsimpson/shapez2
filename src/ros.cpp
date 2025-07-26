@@ -115,20 +115,26 @@ struct Ros {
 }  // namespace Shapez
 
 int main(int argc, char *argv[]) {
-  static bool CROS = true;
+  static bool CROS = false;
   Shapez::Ros ros(CROS);
 
   std::cout << "ROS Finder" << std::endl;
   // ros.test();
   ros.run(CROS);
+  std::cout << "Shapes found: " << ros.allShapes.size() << std::endl;
 
-  std::vector<Shapez::Shape> shapes;
-  shapes.insert(shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
-  std::sort(shapes.begin(), shapes.end());
-
-  std::cout << "Shapes found: " << shapes.size() << std::endl;
-  std::cout << "All shapes..." << std::endl;
-  for (Shapez::Shape shape : shapes) {
-    std::cout << shape.toString() << std::endl;
+  Shapez::ShapeSet shapeSet;
+  shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+  std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
+  if (argc >= 2) {
+    std::string filename = argv[1];
+    shapeSet.save(filename);
   }
+
+  // std::cout << "All shapes..." << std::endl;
+  // for (Shapez::Shape shape : shapeSet.shapes) {
+  //   std::cout << shape.toString() << std::endl;
+  // }
+
+  shapeSet.clear();
 }
