@@ -1,5 +1,6 @@
-APPS := display lookup search solve solver analyze5 display5 lookup5 search5 solve5
+APPS := display lookup ros search solve solver analyze5 display5 lookup5 ros5 search5 solve5
 FILES := $(addprefix bin\,$(addsuffix .exe,$(APPS)))
+# CFLAGS := -static -std=c++23 -g
 CFLAGS := -static -std=c++23 -O3
 
 all: $(FILES)
