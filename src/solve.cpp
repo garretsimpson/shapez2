@@ -43,7 +43,7 @@ struct Solve {
     std::string result = "";
     Solution solution;
 
-    for (auto i = 0; i < indent; ++i) {
+    for (size_t i = 0; i < indent; ++i) {
       result += "  ";
     }
 

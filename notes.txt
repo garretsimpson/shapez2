@@ -1172,3 +1172,22 @@ PPPP:SSSS:----:----
 5-layer
 ROS0  251471   56641  1901153  2.98
 ROS1       0  132660  4184360  3.17
+
+Loading file: cros5
+halves 0, fulls 4184360, total 4184360
+Layer counts...
+0        0
+1       10
+2      210
+3     3810
+4    66370
+5  4113960
+
+table[layerNum][partType][numParts]
+
+Example
+- How many shapes have only 1 solid part on the first layer?
+layerNum = 0
+partType = Solid
+numParts = 1
+table[0][Solid][1]

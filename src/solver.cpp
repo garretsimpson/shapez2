@@ -66,7 +66,7 @@ struct Solver {
 
   void displayShapes(std::vector<Shape> shapes, size_t maxSize = 10) {
     size_t size = std::min(shapes.size(), maxSize);
-    for (int i = 0; i < size; ++i) {
+    for (size_t i = 0; i < size; ++i) {
       std::cout << shapes[i].toString() << std::endl;
     }
   }

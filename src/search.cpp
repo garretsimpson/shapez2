@@ -148,7 +148,7 @@ struct Searcher {
       if (itRight == halvesIdx.end()) {
         continue;
       }
-      if (!lastHalf.has_value() || itLeft->second < *lastHalf && itRight->second < *lastHalf) {
+      if (!lastHalf.has_value() || ((itLeft->second < *lastHalf) && (itRight->second < *lastHalf))) {
         return true;
       }
     }
@@ -359,7 +359,6 @@ void testSolnSet() {
   const size_t SIZE = 252000000;
   SolutionSet solnSet1;
   solnSet1.solutions.resize(SIZE);
-  size_t i = 0;
   for (size_t i = 0; i < SIZE; ++i) {
     Build build = {Op::Stack, Shape(i + 1), Shape(i + 2)};
     Solution solution = {Shape(i + 3), build};

@@ -167,6 +167,8 @@ struct Spu {
         case Op::Crystal:
           shape = shape.crystalize();
           break;
+        default:
+          break;
       }
       // std::cout << std::format("Shape: {}", shape.toString()) << std::endl;
       stack.push_back(shape);
