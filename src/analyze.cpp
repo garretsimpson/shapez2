@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 #include "3ps/ska/bytell_hash_map.hpp"
 #include "shapez.hpp"
@@ -93,6 +94,7 @@ void findQuarters() {
     }
   }
 
+  [[maybe_unused]]
   auto toValue = [](Shape shape) {
     size_t value = 0;
     for (size_t layer = 0; layer < Shape::LAYER; ++layer) {
@@ -118,6 +120,7 @@ void findQuarters() {
     return Shape(corner);
   };
 
+  [[maybe_unused]]
   auto pinOverGap1 = [](Shape shape) {
     std::optional<size_t> firstGap;
     std::optional<size_t> lastPin;
@@ -146,7 +149,7 @@ void findQuarters() {
   // Crystal with no base - unsupported
   auto UnCrystal = [](size_t value) {
     // xCG<not solid>
-    const size_t UNC2 = size_t(Type::Crystal) << 2 + size_t(Type::Empty);
+    const size_t UNC2 = (size_t(Type::Crystal) << 2) + size_t(Type::Empty);
     const size_t MASK2 = 0xf;
     if ((MASK2 & value) == UNC2) return true;
 
@@ -307,15 +310,88 @@ void countShapes() {
   ska::bytell_hash_map<size_t, size_t> distro;
 
   const size_t MAX_COST = 2 * Shape::LAYER * Shape::PART;
-  for (auto i = 0; i <= MAX_COST; ++i) distro[i] = 0;
+  for (size_t i = 0; i <= MAX_COST; ++i) distro[i] = 0;
 
   for (Shape shape : shapes) {
     size_t cost = shape.bitCount();
     distro[cost]++;
   }
 
-  for (auto i = 0; i <= MAX_COST; ++i) {
+  for (size_t i = 0; i <= MAX_COST; ++i) {
     std::cout << std::format("{} {}", i, distro[i]) << std::endl;
+  }
+}
+
+// count number of shapes that have 1,2,3,4 solids/pins on each layer
+// Example: how many shapes have less than 2 solids on layer number 2?
+void analyzeRos() {
+  // First get layer counts
+  std::vector<int> layerCount(Shape::LAYER + 1, 0);
+  for (size_t i = 0; i < layerCount.size(); ++i) {
+    std::cout << std::format("{}  {:7}", i, layerCount[i]) << std::endl;
+  }
+  for (Shape shape : shapes) {
+    layerCount[shape.layers()]++;
+  }
+  std::cout << std::format("Layer counts...") << std::endl;
+  for (size_t i = 0; i < layerCount.size(); ++i) {
+    std::cout << std::format("{}  {:7}", i, layerCount[i]) << std::endl;
+  }
+
+  // Find all 5-layer shapes
+  std::vector<Shape> shapes5;
+  std::copy_if(shapes.begin(), shapes.end(), std::back_inserter(shapes5),
+               [](Shape shape) { return shape.layers() == 5; });
+
+  // The results table is table[layerNum][partType][numParts]
+  std::vector<std::vector<std::vector<int>>> table(
+      Shape::LAYER + 1, std::vector<std::vector<int>>(4, std::vector<int>(Shape::PART + 1, 0)));
+  for (Shape shape : shapes5) {
+    // int numLayers = shape.layers();
+    for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
+      std::vector<int> partCounts(4, 0);
+      for (size_t partNum = 0; partNum < Shape::PART; ++partNum) {
+        int partType = (int)shape.get(layerNum, partNum);
+        partCounts[partType]++;
+      }
+      for (int partType = 0; partType < 4; ++partType) {
+        table[layerNum][partType][partCounts[partType]]++;
+      }
+    }
+  }
+
+  // Display table of all results
+  for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
+    std::cout << std::format("Layer {}", layerNum) << std::endl;
+    std::cout << std::format(" {:9}{:9}{:9}{:9}{:9}", 0, 1, 2, 3, 4) << std::endl;
+    for (int partType = 0; partType < 4; ++partType) {
+      std::cout << std::format("{}", toChar((Shapez::Type)partType));
+      for (size_t numParts = 0; numParts <= Shape::PART; ++numParts) {
+        int value = table[layerNum][partType][numParts];
+        std::cout << std::format("{:9}", value);
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
+  // Display percentage of total shapes
+  int numShapes = shapes5.size();
+  for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
+    std::cout << std::format("Layer {}", layerNum) << std::endl;
+    std::cout << std::format("{:5}{:5}{:5}{:5}{:5}", 0, 1, 2, 3, 4) << std::endl;
+    for (int partType = 0; partType < 4; ++partType) {
+      std::cout << std::format("{}", toChar((Shapez::Type)partType));
+      int sum = 0;
+      for (size_t numParts = 0; numParts <= Shape::PART; ++numParts) {
+        int value = table[layerNum][partType][numParts];
+        sum += value;
+        int percent = (int)(((float)sum / numShapes) * 100.0);
+        std::cout << std::format("{:5}", percent);
+      }
+      std::cout << std::endl;
+    }
+    std::cout << std::endl;
   }
 }
 
@@ -328,9 +404,10 @@ int main(int argc, char* argv[]) {
   }
   Shapez::init(argv[1]);
 
-  Shapez::findQuarters();
+  // Shapez::findQuarters();
   // Shapez::findHalves();
   // Shapez::countShapes();
+  Shapez::analyzeRos();
 
   return 0;
 }
