@@ -1,12 +1,13 @@
 #include <algorithm>
-#include <deque>
-#include <filesystem>
 #include <format>
 #include <iostream>
-#include <optional>
 
 #include "3ps/ska/bytell_hash_map.hpp"
 #include "shapez.hpp"
+
+#ifndef CROS
+#define CROS false
+#endif
 
 namespace Shapez {
 
@@ -16,14 +17,12 @@ struct Ros {
   std::vector<Shape> baseShapes;
   // pinShapes - pin versions of baseShapes
   std::vector<Shape> pinShapes;
-  // number of shapes found
-  size_t count = 0;
+  // newly found shapes
+  std::vector<Shape> newShapes;
   // all shapes
   ska::bytell_hash_set<Shape> allShapes;
-  // working queue
-  std::deque<Shape> queue;
 
-  Ros(bool cros = false) {
+  Ros() {
     // initialize baseShapes with 2, 3, 4 part shapes
     Shape bowtie;
     for (size_t part = 0; part < Shape::PART; part += 2) {
@@ -40,7 +39,7 @@ struct Ros {
         baseShapes.push_back(shape.rotate(part));
       }
     }
-    if (!cros) baseShapes.push_back(Shape(repeat<T>(T(Type::Shape), 2, Shape::PART)));
+    if (!CROS) baseShapes.push_back(Shape(repeat<T>(T(Type::Shape), 2, Shape::PART)));
 
     // pin all the baseShapes
     for (Shape shape : baseShapes) {
@@ -48,93 +47,119 @@ struct Ros {
       T pins = ~empty & repeat<T>(T(Type::Pin), 2, Shape::PART);
       pinShapes.push_back(Shape((shape.value << (2 * Shape::PART)) | pins));
     }
+  }
 
-    // std::cout << "Base shapes..." << std::endl;
-    // for (Shape shape : baseShapes) {
-    //   std::cout << shape.toString() << std::endl;
-    // }
-    // std::cout << "Pin shapes..." << std::endl;
-    // for (Shape shape : pinShapes) {
-    //   std::cout << shape.toString() << std::endl;
-    // }
+  void displayShapes() {
+    std::cout << "Base shapes..." << std::endl;
+    for (Shape shape : baseShapes) {
+      std::cout << shape.toString() << std::endl;
+    }
+    std::cout << "Pin shapes..." << std::endl;
+    for (Shape shape : pinShapes) {
+      std::cout << shape.toString() << std::endl;
+    }
   }
 
   void enqueue(Shape shape) {
     if (allShapes.emplace(shape).second) {
-      queue.push_back(shape);
+      newShapes.push_back(shape);
     }
   }
 
-  void process(Shape shape, bool cros = false) {
+  void process(Shape shape) {
     // stack another shape without pins
     for (Shape top : baseShapes) {
       Shape newShape = shape.stack(top);
       enqueue(newShape);
-      if (cros) {
-        enqueue(newShape.crystalize());
-      }
+      if (CROS) enqueue(newShape.crystalize());
     }
     // stack another shape with pins
     for (Shape top : pinShapes) {
       Shape newShape = shape.stack(top);
       enqueue(newShape);
-      if (cros) {
-        enqueue(newShape.crystalize());
-      }
+      if (CROS) enqueue(newShape.crystalize());
     }
   }
 
-  void run(bool cros = false) {
+  // - Make a list of initial shapes
+  // - Add to newShapes and allShapes
+  // - Repeat LAYER-1 times...
+  //   - Copy newShapes to working queue
+  //   - Clear newShapes
+  //   - Process each shape in the queue
+  //   - Add newly found shapes to newShapes and allShapes
+  void run() {
     std::cout << "Running..." << std::endl;
 
     // Add base shapes as first layer
     for (Shape shape : baseShapes) {
-      if (cros) {
-        shape = shape.crystalize();
-      }
-      queue.push_back(shape);
+      if (CROS) shape = shape.crystalize();
       allShapes.insert(shape);
+      newShapes.push_back(shape);
     }
-    while (!queue.empty()) {
-      Shape shape = queue.front();
-      queue.pop_front();
-      process(shape, cros);
+
+    for (int i = 1; i < Shape::LAYER; ++i) {
+      std::vector<Shape> queue(newShapes);
+      newShapes.clear();
+      for (Shape shape : queue) {
+        process(shape);
+      }
     }
   }
 
   void test() {
-    Shape s0 = baseShapes[0];
-    Shape s1 = pinShapes[0];
-    Shape s = s0.stack(s1);
-    std::cout << "0 " << s0.toString() << std::endl;
-    std::cout << "1 " << s1.toString() << std::endl;
-    std::cout << "R " << s.toString() << std::endl;
+    Shape bt0 = baseShapes[0];
+    Shape bt1 = baseShapes[1];
+    Shape btp0 = pinShapes[0];
+    Shape btp1 = pinShapes[1];
+    // Shape empty = Shape(0);
+    Shape bot0 = Shape("----:----:----:----:----");
+    Shape bot1 = Shape("--SS:----:----:----:----");
+    Shape bot2 = Shape("--SS:--SS:----:----:----");
+    Shape bot3 = Shape("--SS:--SS:--SS:----:----");
+    Shape bot4 = Shape("--SS:--SS:--SS:--SS:----");
+    Shape bot5 = Shape("--SS:--SS:--SS:--SS:--SS");
+    // Shape res = bot.stack(top);
+    // std::cout << "Top " << top.toString() << std::endl;
+    // std::cout << "Bot " << bot.toString() << std::endl;
+    std::cout << std::format("BT0  {} {:x}", bt0.toString(), bt0.value) << std::endl;
+    std::cout << std::format("BT1  {} {:x}", bt1.toString(), bt1.value) << std::endl;
+    std::cout << std::format("BTP0 {} {:x}", btp0.toString(), bt0.value) << std::endl;
+    std::cout << std::format("BTP1 {} {:x}", btp1.toString(), bt1.value) << std::endl;
+    // std::cout << "BTP1  " << btp1.toString() << std::endl;
+    std::cout << "Layers " << bot5.layers() << std::endl;
+    std::cout << "---  " << bot0.stack(btp0).toString() << std::endl;
+    std::cout << "---  " << bot1.stack(btp0).toString() << std::endl;
+    std::cout << "---  " << bot2.stack(btp0).toString() << std::endl;
+    std::cout << "---  " << bot3.stack(btp0).toString() << std::endl;
+    std::cout << "---  " << bot4.stack(btp0).toString() << std::endl;
+    std::cout << "---  " << bot5.stack(btp0).toString() << std::endl;
   }
 };
 
 }  // namespace Shapez
 
 int main(int argc, char *argv[]) {
-  static bool CROS = false;
-  Shapez::Ros ros(CROS);
+  Shapez::Ros ros;
 
   std::cout << "ROS Finder" << std::endl;
   // ros.test();
-  ros.run(CROS);
-  std::cout << "Shapes found: " << ros.allShapes.size() << std::endl;
+  ros.run();
 
-  Shapez::ShapeSet shapeSet;
-  shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
-  std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
+  std::vector<Shapez::Shape> keyShapes;
+  std::copy_if(ros.allShapes.begin(), ros.allShapes.end(), std::back_inserter(keyShapes),
+               [](Shapez::Shape shape) { return shape.equivalentShapes()[0] == shape; });
+  std::cout << std::format("{} total shapes", ros.allShapes.size()) << std::endl;
+  std::cout << std::format("{} key shapes", keyShapes.size()) << std::endl;
+
+  // Save shapes to data file
   if (argc >= 2) {
+    Shapez::ShapeSet shapeSet;
+    shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+    std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
     std::string filename = argv[1];
     shapeSet.save(filename);
+    shapeSet.clear();
   }
-
-  // std::cout << "All shapes..." << std::endl;
-  // for (Shapez::Shape shape : shapeSet.shapes) {
-  //   std::cout << shape.toString() << std::endl;
-  // }
-
-  shapeSet.clear();
+  return 0;
 }
