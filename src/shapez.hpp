@@ -347,12 +347,17 @@ struct Shape {
     // for each of the layers of the top shape, insert the layer if it fits and
     // then collapse
     for (T v = tv; v != 0; v >>= 2 * PART) {
-      // take bottom layer of top shape and move it to the top layer
-      T top = (v & repeat<T>(3, 2, PART)) << (2 * PART * (LAYER - 1));
-      T empty = ret.find<Type::Empty>();
-      if (top & ~empty) break;
-      ret = Shape(ret.value | top);
-      ret = ret.collapse();
+      // take bottom layer of top shape
+      T value = v & repeat<T>(3, 2, PART);
+      // HACK: if bowtie, stack two shapes
+      // FIXME: Use Empty to check for bowties?
+      if (value == 0x11 || value == 0x22 || value == 0x44 || value == 0x88) {
+        constexpr T mask = repeat<T>(3, 2, PART / 2);
+        ret = ret.stackOne(Shape((value & mask) << (2 * PART * (LAYER - 1))));
+        ret = ret.stackOne(Shape((value & ~mask) << (2 * PART * (LAYER - 1))));
+      } else {
+        ret = ret.stackOne(Shape(value << (2 * PART * (LAYER - 1))));
+      }
     }
     return ret;
   }
