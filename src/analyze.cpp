@@ -327,9 +327,6 @@ void countShapes() {
 void analyzeRos() {
   // First get layer counts
   std::vector<int> layerCount(Shape::LAYER + 1, 0);
-  for (size_t i = 0; i < layerCount.size(); ++i) {
-    std::cout << std::format("{}  {:7}", i, layerCount[i]) << std::endl;
-  }
   for (Shape shape : shapes) {
     layerCount[shape.layers()]++;
   }
@@ -338,10 +335,23 @@ void analyzeRos() {
     std::cout << std::format("{}  {:7}", i, layerCount[i]) << std::endl;
   }
 
+  std::cout << std::format("{:7} total shapes", shapes.size()) << std::endl;
+
+  // Find all key shapes
+  std::vector<Shape> keyShapes;
+  std::copy_if(shapes.begin(), shapes.end(), std::back_inserter(keyShapes),
+               [](Shape shape) { return shape.equivalentShapes()[0] == shape; });
+  std::cout << std::format("{:7} key shapes", keyShapes.size()) << std::endl;
+  std::sort(keyShapes.begin(), keyShapes.end());
+  for (Shape shape : keyShapes) {
+    std::cout << shape.toString() << std::endl;
+  }
+
   // Find all 5-layer shapes
   std::vector<Shape> shapes5;
   std::copy_if(shapes.begin(), shapes.end(), std::back_inserter(shapes5),
                [](Shape shape) { return shape.layers() == 5; });
+  std::cout << std::format("{:7} 5 layer shapes", shapes5.size()) << std::endl;
 
   // The results table is table[layerNum][partType][numParts]
   std::vector<std::vector<std::vector<int>>> table(
@@ -378,7 +388,7 @@ void analyzeRos() {
   // Display percentage of total shapes
   int numShapes = shapes5.size();
   for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
-    std::cout << std::format("Layer {}", layerNum) << std::endl;
+    std::cout << std::format("Layer {}", layerNum + 1) << std::endl;
     std::cout << std::format("{:5}{:5}{:5}{:5}{:5}", 0, 1, 2, 3, 4) << std::endl;
     for (int partType = 0; partType < 4; ++partType) {
       std::cout << std::format("{}", toChar((Shapez::Type)partType));
