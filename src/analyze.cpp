@@ -343,9 +343,6 @@ void analyzeRos() {
                [](Shape shape) { return shape.equivalentShapes()[0] == shape; });
   std::cout << std::format("{:7} key shapes", keyShapes.size()) << std::endl;
   std::sort(keyShapes.begin(), keyShapes.end());
-  for (Shape shape : keyShapes) {
-    std::cout << shape.toString() << std::endl;
-  }
 
   // Find all 5-layer shapes
   std::vector<Shape> shapes5;
