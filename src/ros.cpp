@@ -124,8 +124,8 @@ int main(int argc, char *argv[]) {
   // Save shapes to data file
   if (argc >= 2) {
     Shapez::ShapeSet shapeSet;
-    // shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
-    shapeSet.shapes.insert(shapeSet.shapes.end(), keyShapes.begin(), keyShapes.end());
+    shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+    // shapeSet.shapes.insert(shapeSet.shapes.end(), keyShapes.begin(), keyShapes.end());
     std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
     std::string filename = argv[1];
     shapeSet.save(filename);
