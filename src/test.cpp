@@ -22,10 +22,10 @@ void testStack(Shape bot, Shape top, Shape exp) {
 }
 
 void test() {
-  Shape empty = Shape(0);
+  // Shape empty = Shape(0);
   Shape oneLayer = Shape(repeat<T>(T(Type::Shape), 2, Shape::PART));
   std::vector<Shape> full(Shape::LAYER, Shape(0));
-  for (int i = 1; i <= Shape::LAYER; ++i) {
+  for (size_t i = 1; i <= Shape::LAYER; ++i) {
     full[i] = Shape(repeat<T>(oneLayer.value, 2 * Shape::PART, i));
   }
 

@@ -43,9 +43,7 @@ struct Ros {
 
     // pin all the baseShapes
     for (Shape shape : baseShapes) {
-      T empty = shape.find<Type::Empty>();
-      T pins = ~empty & repeat<T>(T(Type::Pin), 2, Shape::PART);
-      pinShapes.push_back(Shape((shape.value << (2 * Shape::PART)) | pins));
+      pinShapes.push_back(shape.pin());
     }
   }
 
@@ -98,42 +96,13 @@ struct Ros {
       newShapes.push_back(shape);
     }
 
-    for (int i = 1; i < Shape::LAYER; ++i) {
+    for (size_t i = 1; i < Shape::LAYER; ++i) {
       std::vector<Shape> queue(newShapes);
       newShapes.clear();
       for (Shape shape : queue) {
         process(shape);
       }
     }
-  }
-
-  void test() {
-    Shape bt0 = baseShapes[0];
-    Shape bt1 = baseShapes[1];
-    Shape btp0 = pinShapes[0];
-    Shape btp1 = pinShapes[1];
-    // Shape empty = Shape(0);
-    Shape bot0 = Shape("----:----:----:----:----");
-    Shape bot1 = Shape("--SS:----:----:----:----");
-    Shape bot2 = Shape("--SS:--SS:----:----:----");
-    Shape bot3 = Shape("--SS:--SS:--SS:----:----");
-    Shape bot4 = Shape("--SS:--SS:--SS:--SS:----");
-    Shape bot5 = Shape("--SS:--SS:--SS:--SS:--SS");
-    // Shape res = bot.stack(top);
-    // std::cout << "Top " << top.toString() << std::endl;
-    // std::cout << "Bot " << bot.toString() << std::endl;
-    std::cout << std::format("BT0  {} {:x}", bt0.toString(), bt0.value) << std::endl;
-    std::cout << std::format("BT1  {} {:x}", bt1.toString(), bt1.value) << std::endl;
-    std::cout << std::format("BTP0 {} {:x}", btp0.toString(), bt0.value) << std::endl;
-    std::cout << std::format("BTP1 {} {:x}", btp1.toString(), bt1.value) << std::endl;
-    // std::cout << "BTP1  " << btp1.toString() << std::endl;
-    std::cout << "Layers " << bot5.layers() << std::endl;
-    std::cout << "---  " << bot0.stack(btp0).toString() << std::endl;
-    std::cout << "---  " << bot1.stack(btp0).toString() << std::endl;
-    std::cout << "---  " << bot2.stack(btp0).toString() << std::endl;
-    std::cout << "---  " << bot3.stack(btp0).toString() << std::endl;
-    std::cout << "---  " << bot4.stack(btp0).toString() << std::endl;
-    std::cout << "---  " << bot5.stack(btp0).toString() << std::endl;
   }
 };
 
@@ -155,7 +124,8 @@ int main(int argc, char *argv[]) {
   // Save shapes to data file
   if (argc >= 2) {
     Shapez::ShapeSet shapeSet;
-    shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+    // shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+    shapeSet.shapes.insert(shapeSet.shapes.end(), keyShapes.begin(), keyShapes.end());
     std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
     std::string filename = argv[1];
     shapeSet.save(filename);

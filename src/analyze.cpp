@@ -405,7 +405,7 @@ void analyzeRos() {
   }
 }
 
-};  // namespace Shapez
+}  // namespace Shapez
 
 int main(int argc, char* argv[]) {
   if (argc != 2) {
