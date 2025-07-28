@@ -142,7 +142,7 @@ struct Shape {
     }
     size_t p = 0;
     for (size_t layer = 0; layer < LAYER; ++layer) {
-      if (layer) {
+      if (layer > 0) {
         if (repr[p++] != ':') {
           throw std::runtime_error("missing :");
         }
@@ -288,6 +288,49 @@ struct Shape {
     return Shape(value | v);
   }
 
+  // stack any shape on top
+  // - break crystals
+  // - for each layer of top shape, bottom-up
+  //   - drop each pin
+  //   - look for bowties
+  //   - drop parts
+  constexpr Shape stack(Shape top) {
+    static constexpr T LAYER_MASK = repeat<T>(3, 2, PART);
+    static constexpr T HALF_MASK = repeat<T>(3, 2, PART / 2);
+
+    // Move 1-layer part from bottom to top layer
+    constexpr auto moveup = [](T part) { return part << (2 * PART * (LAYER - 1)); };
+
+    Shape ret{value};
+    // break all crystal on top shape
+    T tv = top.value;
+    tv &= ~top.find<Type::Crystal>();
+
+    // for each of the layers of the top shape (bottom-up)
+    for (T v = tv; v != 0; v >>= 2 * PART) {
+      T part = v & LAYER_MASK;
+      // stack pins
+      for (size_t pos = 0; pos < PART; ++pos) {
+        T pin = part & (3 << (2 * pos));
+        if (Type(pin >> (2 * pos)) == Type::Pin) {
+          ret = ret.stackOne(Shape(moveup(pin)));
+          part &= ~pin;
+        }
+      }
+      if (part == 0) continue;
+
+      // HACK: part is a single layer, solids only shape.
+      // if it is a bowtie, cut in in half and stack both shapes.
+      if (part == 0x22 || part == 0x88) {
+        ret = ret.stackOne(Shape(moveup(part & HALF_MASK)));
+        ret = ret.stackOne(Shape(moveup(part & ~HALF_MASK)));
+      } else {
+        ret = ret.stackOne(Shape(moveup(part)));
+      }
+    }
+    return ret;
+  }
+
   // Apply shape gravity rules to a shape
   constexpr Shape collapse() const {
     // No change to supported parts
@@ -332,31 +375,6 @@ struct Shape {
           // Stack the connected parts
           ret = ret.stackOne(Shape(connected));
         }
-      }
-    }
-    return ret;
-  }
-
-  // stack any shape on top
-  constexpr Shape stack(Shape top) {
-    Shape ret{value};
-    // break all crystal on top shape
-    T tv = top.value;
-    tv &= ~top.find<Type::Crystal>();
-
-    // for each of the layers of the top shape, insert the layer if it fits and
-    // then collapse
-    for (T v = tv; v != 0; v >>= 2 * PART) {
-      // take bottom layer of top shape
-      T value = v & repeat<T>(3, 2, PART);
-      // HACK: if bowtie, stack two shapes
-      // FIXME: Use Empty to check for bowties?
-      if (value == 0x11 || value == 0x22 || value == 0x44 || value == 0x88) {
-        constexpr T mask = repeat<T>(3, 2, PART / 2);
-        ret = ret.stackOne(Shape((value & mask) << (2 * PART * (LAYER - 1))));
-        ret = ret.stackOne(Shape((value & ~mask) << (2 * PART * (LAYER - 1))));
-      } else {
-        ret = ret.stackOne(Shape(value << (2 * PART * (LAYER - 1))));
       }
     }
     return ret;
