@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <chrono>
 #include <format>
 #include <iostream>
 
@@ -21,6 +22,10 @@ struct Ros {
   std::vector<Shape> newShapes;
   // all shapes
   ska::bytell_hash_set<Shape> allShapes;
+  // counter
+  size_t foundShapes;
+  // count each shape
+  ska::bytell_hash_map<Shape, size_t> numFound;
 
   Ros() {
     // initialize baseShapes with 2, 3, 4 part shapes
@@ -59,8 +64,14 @@ struct Ros {
   }
 
   void enqueue(Shape shape) {
+    foundShapes++;
     if (allShapes.emplace(shape).second) {
       newShapes.push_back(shape);
+    }
+    if (numFound.find(shape) == numFound.end()) {
+      numFound[shape] = 1;
+    } else {
+      numFound[shape]++;
     }
   }
 
@@ -92,16 +103,23 @@ struct Ros {
     // Add base shapes as first layer
     for (Shape shape : baseShapes) {
       if (CROS) shape = shape.crystalize();
-      allShapes.insert(shape);
-      newShapes.push_back(shape);
+      enqueue(shape);
     }
 
     for (size_t i = 1; i < Shape::LAYER; ++i) {
       std::vector<Shape> queue(newShapes);
       newShapes.clear();
+      foundShapes = 0;
+      auto before = std::chrono::system_clock::now();
       for (Shape shape : queue) {
         process(shape);
       }
+      auto after = std::chrono::system_clock::now();
+      long long time = std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count();
+
+      std::cout << std::format("Round {} {:7} in {:7} found {:7} out {:5}", i, queue.size(), foundShapes,
+                               newShapes.size(), time)
+                << std::endl;
     }
   }
 };
@@ -118,6 +136,11 @@ int main(int argc, char *argv[]) {
   std::vector<Shapez::Shape> keyShapes;
   std::copy_if(ros.allShapes.begin(), ros.allShapes.end(), std::back_inserter(keyShapes),
                [](Shapez::Shape shape) { return shape.equivalentShapes()[0] == shape; });
+  size_t totalFound = 0;
+  for (auto it : ros.numFound) {
+    totalFound += it.second;
+  }
+  std::cout << std::format("{} total found", totalFound) << std::endl;
   std::cout << std::format("{} total shapes", ros.allShapes.size()) << std::endl;
   std::cout << std::format("{} key shapes", keyShapes.size()) << std::endl;
 

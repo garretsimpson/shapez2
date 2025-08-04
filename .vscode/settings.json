@@ -55,7 +55,8 @@
     "codecvt": "cpp",
     "ratio": "cpp",
     "iomanip": "cpp",
-    "sstream": "cpp"
+    "sstream": "cpp",
+    "chrono": "cpp"
   },
   "makefile.makePath": "\\msys64\\ucrt64\\bin\\mingw32-make",
   "makefile.launchConfigurations": [
