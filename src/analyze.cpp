@@ -350,11 +350,11 @@ void analyzeRos() {
                [](Shape shape) { return shape.layers() == 5; });
   std::cout << std::format("{:7} 5 layer shapes", shapes5.size()) << std::endl;
 
+  // Count number of parts per part type per layer
   // The results table is table[layerNum][partType][numParts]
   std::vector<std::vector<std::vector<int>>> table(
       Shape::LAYER + 1, std::vector<std::vector<int>>(4, std::vector<int>(Shape::PART + 1, 0)));
   for (Shape shape : shapes5) {
-    // int numLayers = shape.layers();
     for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
       std::vector<int> partCounts(4, 0);
       for (size_t partNum = 0; partNum < Shape::PART; ++partNum) {
@@ -400,6 +400,46 @@ void analyzeRos() {
     }
     std::cout << std::endl;
   }
+
+  // Count number of parts per part type for the entire shape
+  // The results table is table[partType][numParts]
+  int numSpots = Shape::LAYER * Shape::PART;
+  std::vector<std::vector<int>> table2(4, std::vector<int>(numSpots + 1, 0));
+  for (Shape shape : shapes5) {
+    std::vector<int> partCounts(4, 0);
+    for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
+      for (size_t partNum = 0; partNum < Shape::PART; ++partNum) {
+        int partType = (int)shape.get(layerNum, partNum);
+        partCounts[partType]++;
+      }
+    }
+    for (int partType = 0; partType < 4; ++partType) {
+      table2[partType][partCounts[partType]]++;
+    }
+  }
+
+  // Display percentage of total shapes
+  std::cout << "  ";
+  for (int i = 0; i < 4; ++i) {
+    std::cout << std::format("{:>8}   ", toChar((Shapez::Type)i));
+  }
+  std::cout << std::endl;
+  for (size_t numParts = 0; numParts <= numSpots; ++numParts) {
+    std::cout << std::format("{:2}", numParts);
+    // int sum = 0;
+    for (int partType = 0; partType < 4; ++partType) {
+      int value = table2[partType][numParts];
+      // sum += value;
+      float percent = (float(value) / numShapes) * 100.0;
+      std::cout << std::format("{:8}", value);
+      if ((percent > 0.0) && (percent < 1.0f))
+        std::cout << std::format(" <1", percent);
+      else
+        std::cout << std::format("{:3}", int(percent));
+    }
+    std::cout << std::endl;
+  }
+  std::cout << std::endl;
 }
 
 }  // namespace Shapez
