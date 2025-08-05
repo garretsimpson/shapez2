@@ -12,8 +12,12 @@
 
 namespace Shapez {
 
+constexpr static bool FIND_ALL = true;
+
 struct Ros {
   using T = Shape::T;
+  // find all shapes
+  bool findAll = false;
   // baseShapes - list of shapes used to build ROSes
   std::vector<Shape> baseShapes;
   // pinShapes - pin versions of baseShapes
@@ -24,8 +28,6 @@ struct Ros {
   ska::bytell_hash_set<Shape> allShapes;
   // counter
   size_t foundShapes;
-  // count each shape
-  ska::bytell_hash_map<Shape, size_t> numFound;
 
   Ros() {
     // initialize baseShapes with 2, 3, 4 part shapes
@@ -65,13 +67,9 @@ struct Ros {
 
   void enqueue(Shape shape) {
     foundShapes++;
-    if (allShapes.emplace(shape).second) {
+    bool newShape = allShapes.emplace(shape).second;
+    if (FIND_ALL || newShape) {
       newShapes.push_back(shape);
-    }
-    if (numFound.find(shape) == numFound.end()) {
-      numFound[shape] = 1;
-    } else {
-      numFound[shape]++;
     }
   }
 
@@ -117,7 +115,7 @@ struct Ros {
       auto after = std::chrono::system_clock::now();
       long long time = std::chrono::duration_cast<std::chrono::milliseconds>(after - before).count();
 
-      std::cout << std::format("Round {} {:7} in {:7} found {:7} out {:5}", i, queue.size(), foundShapes,
+      std::cout << std::format("Round {} {:8} in {:8} found {:8} out {:5}", i, queue.size(), foundShapes,
                                newShapes.size(), time)
                 << std::endl;
     }
@@ -126,6 +124,9 @@ struct Ros {
 
 }  // namespace Shapez
 
+// TODO
+// - Track each build.
+// - There's a 15% chance of pin push and 85% chance of crystal gen.
 int main(int argc, char *argv[]) {
   Shapez::Ros ros;
 
@@ -136,18 +137,17 @@ int main(int argc, char *argv[]) {
   std::vector<Shapez::Shape> keyShapes;
   std::copy_if(ros.allShapes.begin(), ros.allShapes.end(), std::back_inserter(keyShapes),
                [](Shapez::Shape shape) { return shape.equivalentShapes()[0] == shape; });
-  size_t totalFound = 0;
-  for (auto it : ros.numFound) {
-    totalFound += it.second;
-  }
-  std::cout << std::format("{} total found", totalFound) << std::endl;
+  std::cout << std::format("{} total found", ros.newShapes.size()) << std::endl;
   std::cout << std::format("{} total shapes", ros.allShapes.size()) << std::endl;
   std::cout << std::format("{} key shapes", keyShapes.size()) << std::endl;
 
   // Save shapes to data file
   if (argc >= 2) {
     Shapez::ShapeSet shapeSet;
-    shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
+    if (Shapez::FIND_ALL)
+      shapeSet.shapes.insert(shapeSet.shapes.end(), ros.newShapes.begin(), ros.newShapes.end());
+    else
+      shapeSet.shapes.insert(shapeSet.shapes.end(), ros.allShapes.begin(), ros.allShapes.end());
     // shapeSet.shapes.insert(shapeSet.shapes.end(), keyShapes.begin(), keyShapes.end());
     std::sort(shapeSet.shapes.begin(), shapeSet.shapes.end());
     std::string filename = argv[1];
