@@ -67,8 +67,7 @@ struct Ros {
 
   void enqueue(Shape shape) {
     foundShapes++;
-    bool newShape = allShapes.emplace(shape).second;
-    if (FIND_ALL || newShape) {
+    if (FIND_ALL || allShapes.emplace(shape).second) {
       newShapes.push_back(shape);
     }
   }
@@ -118,6 +117,9 @@ struct Ros {
       std::cout << std::format("Round {} {:8} in {:8} found {:8} out {:5}", i, queue.size(), foundShapes,
                                newShapes.size(), time)
                 << std::endl;
+    }
+    if (FIND_ALL) {
+      for (Shape shape : newShapes) allShapes.insert(shape);
     }
   }
 };
