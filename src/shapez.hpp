@@ -294,6 +294,7 @@ struct Shape {
   //   - drop each pin
   //   - look for bowties
   //   - drop parts
+  // FIXME: This probably fails when the top shape has layers that block some shapes
   constexpr Shape stack(Shape top) {
     static constexpr T LAYER_MASK = repeat<T>(3, 2, PART);
     static constexpr T HALF_MASK = repeat<T>(3, 2, PART / 2);

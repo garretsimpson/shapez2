@@ -6,23 +6,27 @@
 
 namespace Shapez {
 
-// ska::bytell_hash_set<Shape> halves;
-// ska::bytell_hash_set<Shape> shapes;
-std::vector<Shape> halves;
-std::vector<Shape> shapes;
+ShapeSet shapeSet;
+ska::bytell_hash_map<Shape, Build> builds;
 
 void init(const char* filename) {
-  std::cout << "Loading file: " << filename << std::endl;
-  ShapeSet set = ShapeSet::load(filename);
-  halves = {set.halves.begin(), set.halves.end()};
-  shapes = {set.shapes.begin(), set.shapes.end()};
-  set.clear();
-  std::cout << std::format("halves {}, fulls {}, total {}", halves.size(), shapes.size(), halves.size() + shapes.size())
+  std::cout << "Loading shape file: " << filename << std::endl;
+  shapeSet = ShapeSet::load(filename);
+  std::cout << std::format("halves {}, fulls {}, total {}", shapeSet.halves.size(), shapeSet.shapes.size(),
+                           shapeSet.halves.size() + shapeSet.shapes.size())
             << std::endl;
+
+  std::cout << "Loading solution file: " << filename << std::endl;
+  SolutionSet solutionSet = SolutionSet::load(filename);
+  std::cout << std::format("solutions {}", solutionSet.solutions.size()) << std::endl;
+  for (auto it : solutionSet.solutions) {
+    builds[it.shape] = it.build;
+  }
+  solutionSet.clear();
 }
 
 // Whether a shape can be constructed by swapping two halves.
-bool swappable(Shape shape) {
+bool swappable(const Shape shape) {
   constexpr Shape::T mask = repeat<Shape::T>(repeat<Shape::T>(3, 2, Shape::PART / 2), 2 * Shape::PART, Shape::LAYER);
   for (size_t angle = 0; angle < Shape::PART / 2; ++angle) {
     Shape left{shape.rotate(angle).value & mask};
@@ -47,9 +51,9 @@ void verifyShapes() {
   size_t found = 0;
   // shape = {"SSS-:----:----:----"};
 
-  num = shapes.size();
+  num = shapeSet.shapes.size();
   std::cout << "Shapes: " << num << std::endl;
-  for (Shape shape : shapes) {
+  for (Shape shape : shapeSet.shapes) {
     if (swappable(shape)) {
       std::cout << "Found: " << shape.toString() << std::endl;
       found++;
@@ -61,14 +65,14 @@ void verifyShapes() {
     std::cout << "Found: " << found << std::endl;
 }
 
-bool hasDrop(Shape shape, size_t quad = 0) {
+bool hasDrop(const Shape shape, size_t quad = 0) {
   for (size_t layer = 1; layer < Shape::LAYER; ++layer) {
     if (shape.get(layer - 1, quad) == Type::Empty && shape.get(layer, quad) == Type::Crystal) return true;
   }
   return false;
-};
+}
 
-bool hasGapUnderCrystalTop(Shape shape, size_t quad = 0) {
+bool hasGapUnderCrystalTop(const Shape shape, size_t quad = 0) {
   std::optional<size_t> firstGap;
   std::optional<size_t> lastCrystal;
   std::optional<size_t> lastPart;
@@ -89,7 +93,7 @@ void findQuarters() {
 
   constexpr Shape::T mask = repeat<Shape::T>(3, 2 * Shape::PART, Shape::LAYER);
   Shape quarter;
-  for (Shape shape : halves) {
+  for (Shape shape : shapeSet.halves) {
     for (size_t angle = 0; angle < Shape::PART; ++angle) {
       quarter = shape.rotate(angle) & mask;
       quarters.insert(quarter);
@@ -295,16 +299,41 @@ void findQuarters() {
 // Find halves that have drops on both quarters
 void findHalves() {
   std::vector<Shape> shapes0, shapes1;
-  std::copy_if(halves.begin(), halves.end(), std::back_inserter(shapes0),
-               [&](Shape shape) { return hasDrop(shape, 0); });
+  std::copy_if(shapeSet.halves.begin(), shapeSet.halves.end(), std::back_inserter(shapes0),
+               [](Shape shape) { return hasDrop(shape, 0); });
   std::copy_if(shapes0.begin(), shapes0.end(), std::back_inserter(shapes1),
-               [&](Shape shape) { return hasDrop(shape, 1); });
+               [](Shape shape) { return hasDrop(shape, 1); });
   std::sort(shapes1.begin(), shapes1.end());
 
-  std::cout << "Halves: " << halves.size() << std::endl;
+  std::cout << "Halves: " << shapeSet.halves.size() << std::endl;
   std::cout << "Found: " << shapes1.size() << std::endl;
   for (auto shape : shapes1) {
     std::cout << shape.toString() << std::endl;
+  }
+}
+
+// Find claws - shapes that do a pin push break
+// First simple claws - complex/full shapes that have pin push as last step (and break crystal?)
+void findClaws() {
+  constexpr auto isPP = [](const Shape shape) { return builds[shape].op == Op::PinPush; };
+  constexpr auto crystalCount = [](const Shape shape) { return std::popcount(shape.find<Type::Crystal>()) >> 1; };
+  auto breaksCrystal = [&](const Shape shape) { return crystalCount(shape) < crystalCount(builds[shape].shape1); };
+
+  std::vector<Shape> pins, claws;
+  std::copy_if(shapeSet.shapes.begin(), shapeSet.shapes.end(), std::back_inserter(pins), isPP);
+  std::copy_if(pins.begin(), pins.end(), std::back_inserter(claws), breaksCrystal);
+  std::sort(claws.begin(), claws.end());
+
+  std::cout << "Claws: " << claws.size() << std::endl;
+  Build build;
+  Shape shape1, shape2;
+  for (Shape shape : claws) {
+    build = builds[shape];
+    shape1 = build.shape1;
+    shape2 = shape1.pin();
+    std::cout << std::format("{} {}({}) => {}({})", opCode(build.op), shape1.toString(), shape1.bitCount(),
+                             shape2.toString(), shape2.bitCount())
+              << std::endl;
   }
 }
 
@@ -314,7 +343,7 @@ void countShapes() {
   const size_t MAX_COST = 2 * Shape::LAYER * Shape::PART;
   for (size_t i = 0; i <= MAX_COST; ++i) distro[i] = 0;
 
-  for (Shape shape : shapes) {
+  for (Shape shape : shapeSet.shapes) {
     size_t cost = shape.bitCount();
     distro[cost]++;
   }
@@ -329,7 +358,7 @@ void countShapes() {
 void analyzeRos() {
   // First get layer counts
   std::vector<int> layerCount(Shape::LAYER + 1, 0);
-  for (Shape shape : shapes) {
+  for (Shape shape : shapeSet.shapes) {
     layerCount[shape.layers()]++;
   }
   std::cout << std::format("Layer counts...") << std::endl;
@@ -337,10 +366,10 @@ void analyzeRos() {
     std::cout << std::format("{} {:8}", i, layerCount[i]) << std::endl;
   }
 
-  std::cout << std::format("{:8} total shapes", shapes.size()) << std::endl;
+  std::cout << std::format("{:8} total shapes", shapeSet.shapes.size()) << std::endl;
 
   // Find all unique shapes
-  std::vector<Shape> uniqueShapes(shapes);
+  std::vector<Shape> uniqueShapes(shapeSet.shapes);
   std::sort(uniqueShapes.begin(), uniqueShapes.end());
   auto lastIt = std::unique(uniqueShapes.begin(), uniqueShapes.end());
   uniqueShapes.erase(lastIt, uniqueShapes.end());
@@ -373,7 +402,7 @@ void analyzeRos() {
   // The results table is table[layerNum][partType][numParts]
   std::vector<std::vector<std::vector<int>>> table(
       Shape::LAYER + 1, std::vector<std::vector<int>>(4, std::vector<int>(Shape::PART + 1, 0)));
-  for (Shape shape : shapes) {
+  for (Shape shape : shapeSet.shapes) {
     for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
       std::vector<int> partCounts(4, 0);
       for (size_t partNum = 0; partNum < Shape::PART; ++partNum) {
@@ -402,7 +431,7 @@ void analyzeRos() {
   }
 
   // Display percentage of total shapes
-  int numShapes = shapes.size();
+  int numShapes = shapeSet.shapes.size();
   for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
     std::cout << std::format("Layer {}", layerNum + 1) << std::endl;
     std::cout << std::format("{:5}{:5}{:5}{:5}{:5}", 0, 1, 2, 3, 4) << std::endl;
@@ -424,7 +453,7 @@ void analyzeRos() {
   // The results table is table[partType][numParts]
   int numSpots = Shape::LAYER * Shape::PART;
   std::vector<std::vector<int>> table2(4, std::vector<int>(numSpots + 1, 0));
-  for (Shape shape : shapes) {
+  for (Shape shape : shapeSet.shapes) {
     std::vector<int> partCounts(4, 0);
     for (size_t layerNum = 0; layerNum < Shape::LAYER; ++layerNum) {
       for (size_t partNum = 0; partNum < Shape::PART; ++partNum) {
@@ -472,8 +501,9 @@ int main(int argc, char* argv[]) {
 
   // Shapez::findQuarters();
   // Shapez::findHalves();
+  Shapez::findClaws();
   // Shapez::countShapes();
-  Shapez::analyzeRos();
+  // Shapez::analyzeRos();
 
   return 0;
 }
